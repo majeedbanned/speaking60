@@ -1,36 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
-/* daily mobile mode */
-.plan-chips{display:none}
-details.step > summary{list-style:none; cursor:pointer}
-details.step > summary::-webkit-details-marker{display:none}
-details.step:not([open]) > summary{border-bottom:0}
-details.step.isdone > summary{background:var(--good-soft)}
-details.step.isdone > summary .n{background:var(--good); color:#fff}
-.stepbtn{justify-self:start; padding:10px 18px; font-weight:700}
-.howd > summary{cursor:pointer; font-size:13px; color:var(--accent); font-weight:600}
-.howd[open] > summary{margin-bottom:6px}
-.today-bar{display:flex; justify-content:space-between; gap:8px; font-size:13px; color:var(--muted); margin-top:16px; margin-bottom:6px}
-.progress-bar.thin{height:6px; background:var(--surface-2); margin-bottom:14px}
-.s-head{gap:6px; margin-bottom:14px}
-.s-head h1{font-size:24px}
-.s-head .ent{font-size:15px}
-.reveal{margin-top:8px; padding:10px 12px; border-radius:8px; background:var(--surface-2); display:grid; gap:4px}
-.reveal .ex{font-style:italic; opacity:.85}
-.chip.sel{outline:2px solid var(--accent)}
-.chip.known{opacity:.45}
-.biglist .ph-group a{font-size:15px; padding:8px 10px}
-.biglist .ph-group h4{font-size:13px; margin-top:10px}
-.morelist{display:grid; gap:10px}
-.morecard{display:grid; gap:2px; text-decoration:none; color:var(--ink)}
-@media (max-width:900px){
-  .brand{font-size:15px}
-  nav.tabs{position:fixed; bottom:0; left:0; right:0; z-index:6; justify-content:space-around; gap:0; background:var(--surface); border-top:1px solid var(--line); padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
-  nav.tabs a{flex:1; text-align:center; padding:8px 4px}
-  .wrap{padding-block:0 96px}
-  .step > .sh{padding:12px 14px}
-  .step > .sb{padding:12px 14px}
-}
-</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>شصت جلسه تا روانی</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -203,6 +171,41 @@ td .en{font-size:15px}
 .note{border-inline-start:3px solid var(--amber); padding-inline-start:12px}
 @media (prefers-reduced-motion: no-preference){ .wave i{animation:w 1.4s ease-in-out infinite alternate} .wave i:nth-child(2){animation-delay:.2s} .wave i:nth-child(3){animation-delay:.4s} .wave i:nth-child(4){animation-delay:.6s} }
 @keyframes w{from{transform:scaleY(.5)}to{transform:scaleY(1)}}
+
+/* daily mobile mode */
+.plan-chips{display:none}
+details.step > summary{list-style:none; cursor:pointer}
+details.step > summary::-webkit-details-marker{display:none}
+details.step:not([open]) > summary{border-bottom:0}
+details.step.isdone > summary{background:var(--good-soft)}
+details.step.isdone > summary .n{background:var(--good); color:#fff}
+.stepbtn{justify-self:start; padding:10px 18px; font-weight:700}
+.howd > summary{cursor:pointer; font-size:13px; color:var(--accent); font-weight:600}
+.howd[open] > summary{margin-bottom:6px}
+.today-bar{display:flex; justify-content:space-between; gap:8px; font-size:13px; color:var(--muted); margin-top:16px; margin-bottom:6px}
+.progress-bar.thin{height:6px; background:var(--surface-2); margin-bottom:14px}
+.s-head{gap:6px; margin-bottom:14px}
+.s-head h1{font-size:24px}
+.s-head .ent{font-size:15px}
+.reveal{margin-top:8px; padding:10px 12px; border-radius:8px; background:var(--surface-2); display:grid; gap:4px}
+.reveal .ex{font-style:italic; opacity:.85}
+.chip.sel{outline:2px solid var(--accent)}
+.chip.known{opacity:.45}
+.biglist .ph-group a{font-size:15px; padding:8px 10px}
+.biglist .ph-group h4{font-size:13px; margin-top:10px}
+.morelist{display:grid; gap:10px}
+.morecard{display:grid; gap:2px; text-decoration:none; color:var(--ink)}
+@media (max-width:900px){
+  header.top{backdrop-filter:none; background:var(--bg)}
+  .brand{font-size:15px}
+  nav.tabs{position:fixed; bottom:0; left:0; right:0; z-index:6; justify-content:space-around; gap:0; background:var(--surface); border-top:1px solid var(--line); padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+  nav.tabs a{flex:1; text-align:center; padding:8px 4px}
+  .wrap{padding-block:0 96px}
+  .step > .sh{padding:12px 14px}
+  .step > .sb{padding:12px 14px}
+}
+
+.s-head .kick{display:none}
 </style>
 
 <header class="top"><div class="bar">
