@@ -1,4 +1,36 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+/* daily mobile mode */
+.plan-chips{display:none}
+details.step > summary{list-style:none; cursor:pointer}
+details.step > summary::-webkit-details-marker{display:none}
+details.step:not([open]) > summary{border-bottom:0}
+details.step.isdone > summary{background:var(--good-soft)}
+details.step.isdone > summary .n{background:var(--good); color:#fff}
+.stepbtn{justify-self:start; padding:10px 18px; font-weight:700}
+.howd > summary{cursor:pointer; font-size:13px; color:var(--accent); font-weight:600}
+.howd[open] > summary{margin-bottom:6px}
+.today-bar{display:flex; justify-content:space-between; gap:8px; font-size:13px; color:var(--muted); margin-top:16px; margin-bottom:6px}
+.progress-bar.thin{height:6px; background:var(--surface-2); margin-bottom:14px}
+.s-head{gap:6px; margin-bottom:14px}
+.s-head h1{font-size:24px}
+.s-head .ent{font-size:15px}
+.reveal{margin-top:8px; padding:10px 12px; border-radius:8px; background:var(--surface-2); display:grid; gap:4px}
+.reveal .ex{font-style:italic; opacity:.85}
+.chip.sel{outline:2px solid var(--accent)}
+.chip.known{opacity:.45}
+.biglist .ph-group a{font-size:15px; padding:8px 10px}
+.biglist .ph-group h4{font-size:13px; margin-top:10px}
+.morelist{display:grid; gap:10px}
+.morecard{display:grid; gap:2px; text-decoration:none; color:var(--ink)}
+@media (max-width:900px){
+  .brand{font-size:15px}
+  nav.tabs{position:fixed; bottom:0; left:0; right:0; z-index:6; justify-content:space-around; gap:0; background:var(--surface); border-top:1px solid var(--line); padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+  nav.tabs a{flex:1; text-align:center; padding:8px 4px}
+  .wrap{padding-block:0 96px}
+  .step > .sh{padding:12px 14px}
+  .step > .sb{padding:12px 14px}
+}
+</style></head><body>
 <title>شصت جلسه تا روانی</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1205,24 +1237,32 @@ When I say "RESULTS", give me:
 Start with Part 1 now.`;
 
 /* ======================= Rendering: shell ======================= */
-const TABS=[["guide","راهنما"],["assess","ارزیابی اولیه"],["s","جلسه‌ها"],["errors","دفتر خطا"],["progress","پیشرفت"]];
-let LASTN=1;
+const TABS=[["today","امروز"],["list","جلسه‌ها"],["errors","دفتر خطا"],["more","بیشتر"]];
+let LASTN=1, CURN=null;
+function stepsDone(){ return (ST.steps&&ST.steps[CURN])||[]; }
 function route(keep){
   const h=(location.hash||"").replace("#","");
-  let view="guide", n=null;
+  let view="today", n=null;
   if(/^s\d+$/.test(h)){ view="s"; n=Math.min(60,Math.max(1,parseInt(h.slice(1)))); }
-  else if(["guide","assess","errors","progress"].includes(h)) view=h;
-  else if(h==="s"){ view="s"; n=nextSession(); }
-  $("#tabs").innerHTML = TABS.map(([k,l])=>`<a href="#${k==="s"?"s"+(view==="s"?n:nextSession()):k}" class="${view===k?"on":""}">${l}</a>`).join("");
+  else if(["guide","assess","errors","progress","list","more"].includes(h)) view=h;
+  if(view==="today") n=nextSession();
+  CURN = n!=null ? n : (view==="assess" ? "a" : null);
+  const on = view==="s" ? (n===nextSession()?"today":"list") : (["guide","assess","progress"].includes(view)?"more":view);
+  $("#tabs").innerHTML = TABS.map(([k,l])=>`<a href="#${k}" class="${on===k?"on":""}">${l}</a>`).join("");
   const app=$("#app");
   if(view==="guide") app.innerHTML=renderGuide();
   else if(view==="assess") app.innerHTML=renderAssess();
   else if(view==="errors") app.innerHTML=renderErrors();
   else if(view==="progress") app.innerHTML=renderProgress();
+  else if(view==="list") app.innerHTML=renderList();
+  else if(view==="more") app.innerHTML=renderMore();
   else app.innerHTML=renderSessionShell(n);
-  if(view==="s") LASTN=n;
+  if(n!=null) LASTN=n;
   bind(view,n);
-  if(!keep) window.scrollTo(0,0);
+  tidy();
+  const opened=openStep();
+  if(keep && opened) opened.scrollIntoView({block:"start"});
+  else if(!keep) window.scrollTo(0,0);
 }
 function sideList(cur){
   let h="";
@@ -1234,18 +1274,41 @@ function sideList(cur){
   }
   return h;
 }
-function mobilePick(cur){
-  return `<div class="mobile-pick"><button class="btn" data-go="${Math.max(1,cur-1)}" aria-label="جلسهٔ قبل">→</button><select id="pick">${ALL().map(s=>`<option value="${s.n}" ${s.n===cur?"selected":""}>${fa(s.n)} — ${esc(s.t)}${ST.done[s.n]?" ✓":""}</option>`).join("")}</select><button class="btn" data-go="${Math.min(60,cur+1)}" aria-label="جلسهٔ بعد">←</button></div>`;
+function renderList(){
+  const nx=nextSession();
+  return `<div class="biglist" style="margin-top:16px"><p class="small muted">${fa(Object.keys(ST.done).filter(k=>ST.done[k]).length)} از ۶۰ جلسه انجام شده · جلسهٔ امروز: <a href="#today">${fa(nx)}</a></p>${sideList(nx)}</div>`;
+}
+function renderMore(){
+  const card=(href,t,d)=>`<a class="card morecard" href="${href}"><b>${t}</b><span class="small muted">${d}</span></a>`;
+  return `<div class="morelist" style="margin-top:16px">
+  ${card("#assess","ارزیابی اولیه","یک بار قبل از جلسهٔ ۱ — تعیین سطح و ضعف‌ها")}
+  ${card("#progress","پیشرفت با عدد","ثبت عددهای ارزیابی‌ها و پشتیبان‌گیری")}
+  ${card("#guide","راهنمای برنامه","ساختار، قوانین و منابع")}</div>`;
 }
 function renderSessionShell(n){
-  const s=SESSIONS[n];
-  return `${mobilePick(n)}<div class="layout"><aside class="list" aria-label="فهرست جلسه‌ها">${sideList(n)}</aside><main>${s.review?renderReview(s):renderSession(s)}${navRow(n)}</main></div>`;
+  const s=SESSIONS[n], total=s.review?5:9, d=stepsDone().length;
+  const notAssessed = n===1 && !(ST.metrics&&ST.metrics[0]&&ST.metrics[0].wpm);
+  return `<div class="layout"><aside class="list" aria-label="فهرست جلسه‌ها">${sideList(n)}</aside><main>
+  <div class="today-bar"><span>جلسهٔ ${fa(n)} از ۶۰${ST.done[n]?" · انجام شده ✓":""}</span><span>${fa(d)} از ${fa(total)} بخش</span></div>
+  <div class="progress-bar thin" aria-hidden="true"><i style="width:${Math.round(d/total*100)}%"></i></div>
+  ${notAssessed?`<p class="small" style="margin:10px 0 0"><a href="#assess">قبل از شروع: ارزیابی اولیه (فقط یک بار) ←</a></p>`:""}
+  ${s.review?renderReview(s):renderSession(s)}${navRow(n)}</main></div>`;
 }
 function navRow(n){
-  return `<div class="navrow">${n>1?`<a class="btn" href="#s${n-1}">→ جلسهٔ ${fa(n-1)}</a>`:"<span></span>"}${n<60?`<a class="btn pri" href="#s${n+1}">جلسهٔ ${fa(n+1)} ←</a>`:""}</div>`;
+  return `<div class="navrow">${n>1?`<a class="btn" href="#s${n-1}">→ جلسهٔ ${fa(n-1)}</a>`:"<span></span>"}${n<60?`<a class="btn" href="#s${n+1}">جلسهٔ ${fa(n+1)} ←</a>`:""}</div>`;
 }
 function step(num, title, time, body, cls=""){
-  return `<section class="step ${cls}"><div class="sh"><span class="n">${num}</span><h2>${title}</h2>${time?`<span class="t">${time}</span>`:""}</div><div class="sb">${body}</div></section>`;
+  const done=stepsDone().includes(num);
+  return `<details class="step ${cls} ${done?"isdone":""}" data-step="${num}"><summary class="sh"><span class="n">${done?"✓":fa(num)}</span><h2>${title}</h2>${time?`<span class="t">${time}</span>`:""}</summary><div class="sb">${body}<button class="btn pri stepbtn" data-stepdone="${num}">${done?"بخش بعدی ←":"انجام شد، برو بعدی ←"}</button></div></details>`;
+}
+function openStep(){
+  const all=[...document.querySelectorAll("details.step")]; if(!all.length) return null;
+  const t=all.find(d=>!d.classList.contains("isdone")); if(t) t.open=true; return t||null;
+}
+function tidy(){
+  document.querySelectorAll(".sb .how").forEach(h=>{ const d=document.createElement("details"); d.className="howd"; d.innerHTML="<summary>روش انجام</summary>"; h.replaceWith(d); d.appendChild(h); });
+  document.querySelectorAll(".focusbox").forEach(f=>{ const d=document.createElement("details"); d.className="howd"; d.innerHTML="<summary>تمرین اضافهٔ مخصوص تو</summary>"; f.replaceWith(d); d.appendChild(f); });
+  document.querySelectorAll(".srs-src").forEach(s=>{ const r=document.createElement("div"); r.className="reveal"; r.hidden=true; s.appendChild(r); });
 }
 function itemRows(n, type, arr){
   return `<div class="items">${arr.map((x,i)=>{ const k=itemKey(n,type,i); return `<div class="item"><button class="star ${ST.hard[k]?"on":""}" data-star="${k}" title="سخت است / بلد نیستم — به لیست مرور اضافه شود" aria-label="علامت سخت">★</button><div><div class="top"><span class="w">${esc(x[0])}</span><span class="fa">${esc(x[1])}</span></div><div class="ex">${esc(x[2])}</div></div></div>`; }).join("")}</div>`;
@@ -1502,7 +1565,19 @@ function renderProgress(){
 /* ======================= Events ======================= */
 function bind(view,n){
   document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{ copyText(b.parentElement.querySelector("pre").textContent,b); }));
-  document.querySelectorAll("[data-star]").forEach(b=>b.addEventListener("click",()=>{ const k=b.dataset.star; ST.hard[k]=!ST.hard[k]; if(!ST.hard[k]) delete ST.hard[k]; save(); document.querySelectorAll(`[data-star="${k}"]`).forEach(x=>x.classList.toggle("on",!!ST.hard[k])); if(view==="errors") route(true); }));
+  const setHard=(k,v)=>{ if(v) ST.hard[k]=true; else delete ST.hard[k]; save(); document.querySelectorAll(`[data-star="${k}"]`).forEach(x=>x.classList.toggle("on",!!v)); };
+  document.querySelectorAll("[data-star]").forEach(b=>b.addEventListener("click",()=>{ const k=b.dataset.star; const src=b.closest(".srs-src");
+    if(b.classList.contains("chip") && src){ const r=src.querySelector(".reveal"), it=itemBy(k); if(!r||!it) return;
+      src.querySelectorAll(".chip").forEach(c=>c.classList.remove("sel")); b.classList.add("sel");
+      r.hidden=false; r.innerHTML=`<div class="en"><b>${esc(it[0])}</b></div><div>${esc(it[1])}</div><div class="en ex">${esc(it[2])}</div><div class="row"><button class="btn" data-know="${k}">بلد بودم ✓</button><button class="btn" data-hardset="${k}">سخت بود ★</button></div>`;
+      r.querySelector("[data-know]").onclick=()=>{ setHard(k,false); b.classList.add("known"); r.hidden=true; };
+      r.querySelector("[data-hardset]").onclick=()=>{ setHard(k,true); r.hidden=true; };
+      return; }
+    setHard(k,!ST.hard[k]); if(view==="errors") route(true); }));
+  document.querySelectorAll("[data-stepdone]").forEach(b=>b.addEventListener("click",()=>{ const num=+b.dataset.stepdone; ST.steps=ST.steps||{}; const arr=ST.steps[CURN]=ST.steps[CURN]||[]; if(!arr.includes(num)) arr.push(num);
+    const total=document.querySelectorAll("details.step").length; if(typeof CURN==="number" && arr.length>=total) ST.done[CURN]=true; save(); route(true);
+    if(typeof CURN==="number" && ST.done[CURN] && arr.length>=total){ const nr=document.querySelector(".navrow"); if(nr) nr.scrollIntoView({block:"center"}); } }));
+  document.querySelectorAll("details.step").forEach(d=>d.addEventListener("toggle",()=>{ if(d.open) document.querySelectorAll("details.step").forEach(o=>{ if(o!==d) o.open=false; }); }));
   const pk=$("#pick"); if(pk) pk.addEventListener("change",()=>{ location.hash="s"+pk.value; });
   document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>{ location.hash="s"+b.dataset.go; }));
   const d=$("#done"); if(d) d.addEventListener("change",()=>{ ST.done[n]=d.checked; if(!d.checked) delete ST.done[n]; save(); });
