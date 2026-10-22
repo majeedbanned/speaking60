@@ -248,3 +248,8 @@ html.no-tts .say{display:none}
 .banner .btn{justify-self:start}
 .btn.small{padding:2px 10px; font-size:13px}
 .morelist .card{display:grid; gap:4px}
+
+/* ChatGPT round-trip */
+.report{border:1px solid var(--line); border-radius:8px; padding:10px 12px; display:grid; gap:6px; background:var(--surface)}
+.report textarea{min-height:110px; font-size:13px}
+.prompt .row{gap:8px}

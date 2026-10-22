@@ -49,10 +49,10 @@ const KIT = {
 
 /* ======================= State (per-browser convenience) ======================= */
 const KEY="sp60_v1";
-const defaultState = () => ({done:{}, passed:{}, hard:{}, focus:[], err:[], metrics:{}, cando:{}, profile:{}, phrases:[], ttsRate:1});
+const defaultState = () => ({done:{}, passed:{}, hard:{}, focus:[], err:[], metrics:{}, cando:{}, profile:{}, phrases:[], ttsRate:1, reports:{}});
 let ST = defaultState();
 try{ const raw = localStorage.getItem(KEY); if(raw){ ST = Object.assign(ST, JSON.parse(raw)); } }catch(e){}
-ST.profile = ST.profile || {}; ST.phrases = ST.phrases || [];
+ST.profile = ST.profile || {}; ST.phrases = ST.phrases || []; ST.reports = ST.reports || {};
 function save(){ ST._ts=Date.now(); if(!ST.firstUse) ST.firstUse=ST._ts; const raw=JSON.stringify(ST); try{ localStorage.setItem(KEY, raw); }catch(e){} try{ IDB.put("kv","state",raw).catch(()=>{}); }catch(e){} }
 
 /* ======================= Helpers ======================= */
@@ -123,12 +123,37 @@ const RULES = `RULES FOR YOU:
 - Speak at a natural, normal speed. Don't simplify your English too much.
 - Never switch to Persian, even if I ask for a translation; explain in simple English instead.
 - If I'm stuck for words, don't give me the answer immediately: first ask me to describe it another way.`;
+const REPORT_LINES = `ERRORS:
+- I said: "<my exact words>" | Correct: "<natural version>" | Type: <grammar|vocabulary|pronunciation|persian-style>`;
+const REPORT_SESSION = `WHEN I TYPE "REPORT" (after the voice conversation ends), reply with ONLY this block in plain text — nothing before or after it:
+=== SESSION REPORT ===
+SCORES: fluency=<1-10>; accuracy=<1-10>; vocabulary=<1-10>; pronunciation=<1-10>
+MUST-USED: <number>/5
+${REPORT_LINES}
+(3 to 6 ERRORS lines with my most important mistakes)
+=== END ===`;
+const REPORT_CHECK = quiz => `WHEN I TYPE "REPORT" (after the voice conversation ends), reply with ONLY this block in plain text — nothing before or after it:
+=== CHECKPOINT REPORT ===
+BANDS: fluency=<1-9>; lexical=<1-9>; grammar=<1-9>; pronunciation=<1-9>
+CEFR: <B1|B1+|B2|B2+|C1>${quiz?"\nQUIZ: correct=<n>; almost=<n>; missed=<n>":""}
+${REPORT_LINES}
+(3 to 6 ERRORS lines with my most important mistakes)
+=== END ===`;
+const REPORT_TRANSCRIPT = `8) Finally, end your answer with this block in plain text, exactly in this format:
+=== TRANSCRIPT REPORT ===
+METRICS: wpm_avg=<number>; errors_per_min_avg=<number>; band_fluency=<1-9>
+CEFR: <B1|B1+|B2|B2+|C1>
+${REPORT_LINES}
+(up to 8 ERRORS lines — the same mistakes as in your Error Log table)
+=== END ===`;
 const WRAP = `WHEN I SAY "FEEDBACK" (or after about 15 minutes), stop the conversation and give me:
 1) My top 3 recurring mistakes, each with the correct version and a one-line rule.
 2) 5 more natural phrases I could have used, based on what I said.
 3) Which of the 5 MUST-USE items I used correctly, and which I didn't use at all.
 4) Scores from 1 to 10 for fluency, accuracy, vocabulary range and pronunciation, with one sentence of reasoning each.
-5) One sentence for me to practice saying 5 times.`;
+5) One sentence for me to practice saying 5 times.
+
+${REPORT_SESSION}`;
 
 function buildPrompt(s){
   const sp=split(s);
@@ -211,6 +236,8 @@ ${fl}
 `:""}
 ${RULES.replace("RULES FOR YOU:","RULES FOR YOU (in parts 1–3):")}
 
+${REPORT_CHECK(true)}
+
 Start now with Part 1.`;
 }
 function assessTranscriptPrompt(){ return `You are an experienced IELTS Speaking examiner and English speaking coach. ${learner()}
@@ -228,6 +255,7 @@ Please analyze them and give me:
 5) My 3 biggest weaknesses in order of priority, choosing from: fluency, grammatical accuracy, vocabulary range, pronunciation, listening, confidence.
 6) An "Error Log" table with three columns: What I said | Natural version | Rule / reason. Include up to 12 rows.
 7) 10 more natural or advanced ways to say things I said.
+${REPORT_TRANSCRIPT}
 Be honest and specific, not just encouraging.
 
 TASK A transcript:
@@ -255,7 +283,82 @@ When I say "RESULTS", give me:
 5) Which typical Persian-speaker errors I made (he/she, articles, prepositions, uncountable nouns, make/do, word order).
 6) My top 3 priorities for the next 60 sessions.
 
+${REPORT_CHECK(false)}
+
 Start with Part 1 now.`; }
+
+/* ======================= ChatGPT round-trip ======================= */
+function gptBlock(text){
+  const enc=encodeURIComponent(text), direct=enc.length<=12000;
+  return `<div class="prompt"><div class="row"><a class="btn pri" href="${direct?"https://chatgpt.com/?q="+enc:"https://chatgpt.com/"}" target="_blank" rel="noopener" data-gptopen>باز کردن در ChatGPT</a><button class="btn copy" type="button" data-copy>کپی پرامپت</button></div><p class="small muted">${direct?"پرامپت در یک چت جدید خودکار فرستاده می‌شود و در حافظهٔ گوشی هم کپی می‌شود. اگر اپ ChatGPT باز شد و پرامپت را نشان نداد، فقط Paste کن و بفرست.":"پرامپت امروز برای لینک مستقیم بلند است: با زدن دکمه کپی می‌شود و ChatGPT باز می‌شود؛ فقط Paste کن و بفرست."}</p><pre>${esc(text)}</pre></div>`;
+}
+const REPORT_KEY = (kind,n) => (kind==="session"||kind==="review") ? String(n) : (kind==="transcript" ? "t"+n : "v"+n);
+function parseReport(t){
+  t=String(t||"").replace(/[“”„″]/g,'"').replace(/[‘’]/g,"'").replace(/\*\*|`/g,"");
+  const line=label=>{ const m=t.match(new RegExp("^[\\s>*-]*"+label+"\\s*:(.*)$","im")); return m?m[1]:null; };
+  const kv=x=>{ if(!x) return null; const o={}; x.split(/[;,]/).forEach(p=>{ const m=p.match(/([a-z_]+)\s*[=:]\s*(\d+(?:\.\d+)?)/i); if(m) o[m[1].toLowerCase()]=+m[2]; }); return Object.keys(o).length?o:null; };
+  const r={scores:kv(line("SCORES")), bands:kv(line("BANDS")), errors:[]};
+  const met=kv(line("METRICS")); if(met){ r.wpm=met.wpm_avg!=null?met.wpm_avg:met.wpm; r.epm=met.errors_per_min_avg!=null?met.errors_per_min_avg:met.errors_per_min; r.bandF=met.band_fluency; }
+  const mu=t.match(/MUST-USED\s*:\s*(\d)\s*\/\s*5/i); if(mu) r.must=+mu[1];
+  const ce=t.match(/^[\s>*-]*CEFR\s*:\s*([ABC][12]\+?)/im); if(ce) r.cefr=ce[1].toUpperCase();
+  const qz=kv(line("QUIZ")); if(qz) r.quiz={correct:qz.correct||0, almost:qz.almost||0, missed:qz.missed||0};
+  const re=/I said:\s*"([^"]+)"\s*\|\s*Correct:\s*"([^"]+)"(?:\s*\|\s*Type:\s*([A-Za-z\- ]+))?/gi; let m;
+  while((m=re.exec(t))) r.errors.push({wrong:m[1].trim(), right:m[2].trim(), type:(m[3]||"").toLowerCase()});
+  return r;
+}
+function saveReport(kind, n, text){
+  const r=parseReport(text);
+  if(!(r.scores||r.bands||r.wpm!=null||r.must!=null||r.cefr||r.errors.length)) return {ok:false};
+  const rec={ts:Date.now()};
+  ["scores","must","bands","cefr","quiz","wpm","epm"].forEach(k=>{ if(r[k]!=null) rec[k]=r[k]; });
+  if(kind!=="session"){
+    const m=ST.metrics[n]=ST.metrics[n]||{};
+    if(r.wpm!=null) m.wpm=r.wpm; if(r.epm!=null) m.err=r.epm;
+    const bf=(r.bands&&r.bands.fluency!=null)?r.bands.fluency:r.bandF;
+    if(bf!=null && (kind!=="transcript" || m.band==null)) m.band=bf;
+  }
+  const tmap=t=>/gram/.test(t)?"g":/pron/.test(t)?"p":/persian/.test(t)?"f":"v";
+  const have=new Set((ST.err||[]).map(e=>e.wrong.toLowerCase())); let added=0;
+  r.errors.forEach(e=>{ const k=e.wrong.toLowerCase(); if(have.has(k)) return; ST.err.push({s:n, wrong:e.wrong, right:e.right, type:tmap(e.type), done:false}); have.add(k); added++; });
+  rec.nerr=added;
+  ST.reports[REPORT_KEY(kind,n)]=rec; save();
+  return {ok:true, rec};
+}
+const dash = v => v==null ? "-" : fa(v);
+function reportSummary(r){
+  if(!r) return "";
+  const p=[];
+  if(r.scores) p.push(`روانی ${dash(r.scores.fluency)} · دقت ${dash(r.scores.accuracy)} · واژگان ${dash(r.scores.vocabulary)} · تلفظ ${dash(r.scores.pronunciation)}`);
+  if(r.must!=null) p.push(`موارد اصلی ${fa(r.must)} از ۵`);
+  if(r.bands) p.push(`Band روانی ${dash(r.bands.fluency)} · واژگان ${dash(r.bands.lexical)} · گرامر ${dash(r.bands.grammar)} · تلفظ ${dash(r.bands.pronunciation)}`);
+  if(r.cefr) p.push(`CEFR ${r.cefr}`);
+  if(r.quiz) p.push(`Quiz: ${fa(r.quiz.correct)} درست، ${fa(r.quiz.almost)} تقریباً، ${fa(r.quiz.missed)} غلط`);
+  if(r.wpm!=null) p.push(`WPM ${fa(r.wpm)}`); if(r.epm!=null) p.push(`خطا در دقیقه ${fa(r.epm)}`);
+  if(r.nerr) p.push(`${fa(r.nerr)} اشتباه به دفتر خطا اضافه شد`);
+  return `<div class="small ok">ثبت‌شده: ${p.join(" · ")}</div>`;
+}
+function reportBox(kind, n){
+  const how={
+    session:`بعد از تمام شدن گفتگو، Voice را ببند و در همان چت تایپ کن <span class="en">REPORT</span>. جواب را کامل کپی کن و اینجا Paste کن: نمره‌ها در «پیشرفت» جمع می‌شوند و اشتباه‌ها به دفتر خطا می‌روند.`,
+    review:`بعد از گفتگو، Voice را ببند و تایپ کن <span class="en">REPORT</span>. جواب را اینجا Paste کن: Band روانی در جدول پیشرفت، CEFR و نتیجهٔ Quiz ثبت می‌شوند و اشتباه‌ها به دفتر خطا می‌روند.`,
+    transcript:`جواب کامل ChatGPT را اینجا Paste کن: WPM میانگین، خطا در دقیقه و Band روانی در جدول پیشرفت ثبت می‌شوند و Error Log به دفتر خطا می‌رود.`,
+    voice:`بعد از آزمون، Voice را ببند و تایپ کن <span class="en">REPORT</span>. جواب را اینجا Paste کن: Band روانی خط پایه و CEFR ثبت می‌شوند.`
+  }[kind];
+  const tag={session:"SESSION",review:"CHECKPOINT",transcript:"TRANSCRIPT",voice:"CHECKPOINT"}[kind];
+  return `<div class="report" data-report="${kind}" data-n="${n}"><div class="sub">برگرداندن گزارش ChatGPT به برنامه</div><p class="small">${how}</p><textarea class="en" data-reporttext placeholder="=== ${tag} REPORT === …"></textarea><div class="row"><button class="btn pri" type="button" data-reportsave>ثبت گزارش</button><span class="small" data-reportmsg></span></div><div data-reportsum>${reportSummary(ST.reports[REPORT_KEY(kind,n)])}</div></div>`;
+}
+function scoresSection(){
+  const rep=ST.reports||{};
+  const nums=Object.keys(rep).filter(k=>/^\d+$/.test(k)).map(Number).sort((a,b)=>a-b);
+  const sess=nums.filter(n=>rep[n].scores), chk=nums.filter(n=>rep[n].bands||rep[n].cefr);
+  if(!sess.length && !chk.length && !rep.v0) return `<h2>نمره‌های جلسه‌ها</h2><p class="small muted">بعد از هر گفتگو با ChatGPT، جواب REPORT را در بخش ۸ همان جلسه Paste کن تا نمره‌ها اینجا جمع شوند.</p>`;
+  const L=["fluency","accuracy","vocabulary","pronunciation"], N=["روانی","دقت","واژگان","تلفظ"];
+  const avg=(arr,k)=>{ const v=arr.map(n=>rep[n].scores[k]).filter(x=>x!=null); return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length*10)/10:null; };
+  const trend = sess.length>=6 ? `<p class="small">میانگین ۵ جلسهٔ اول ← ۵ جلسهٔ آخر: ${L.map((k,i)=>`${N[i]} ${dash(avg(sess.slice(0,5),k))} ← <b>${dash(avg(sess.slice(-5),k))}</b>`).join(" · ")}</p>` : "";
+  const cps=[...(rep.v0?[`خط پایه: CEFR ${rep.v0.cefr||"-"} · Band روانی ${dash(rep.v0.bands&&rep.v0.bands.fluency)}`]:[]), ...chk.map(n=>`جلسهٔ ${fa(n)}: CEFR ${rep[n].cefr||"-"} · Band روانی ${dash(rep[n].bands&&rep[n].bands.fluency)}`)];
+  const table = sess.length ? `<div class="tbl"><table><thead><tr><th>جلسه</th>${N.map(x=>`<th>${x}</th>`).join("")}<th>موارد اصلی</th></tr></thead><tbody>${sess.slice().reverse().map(n=>`<tr><td class="kpi">${fa(n)}</td>${L.map(k=>`<td class="kpi">${dash(rep[n].scores[k])}</td>`).join("")}<td class="kpi">${rep[n].must!=null?fa(rep[n].must)+" از ۵":"-"}</td></tr>`).join("")}</tbody></table></div>` : "";
+  return `<h2>نمره‌های جلسه‌ها (از گزارش ChatGPT)</h2>${trend}${cps.length?`<p class="small">${cps.join(" | ")}</p>`:""}${table}`;
+}
 
 /* ======================= Rendering: shell ======================= */
 const TABS=[["today","امروز"],["list","جلسه‌ها"],["errors","دفتر من"],["more","بیشتر"]];
@@ -395,8 +498,8 @@ function renderSession(s){
     rateBar()+`<p>${esc(s.pr.fa)}</p><div class="pron">${s.pr.items.map(pronHtml).join("")}</div><div class="how">🔊 را بزن تا تلفظ آمریکایی را بشنوی (بدون اینترنت هم کار می‌کند). برای شنیدن از زبان آدم‌های واقعی، موارد لینک‌دار را در YouGlish باز کن. هر مورد را ۵ بار بلند بگو، سپس یک جمله با آن بساز. حروف بزرگ = هجای تکیه‌دار؛ ↗ / ↘ = لحن بالارونده / پایین‌رونده. مدل تلفظ این برنامه انگلیسی آمریکایی است.</div>`);
   const s7=step(7,"تمرین روانی (Fluency Drill)","۵ دقیقه",`<p>${esc(s.fl)}</p><div class="how">قانون تمرین روانی: <b>نایست، برنگرد، ترجمه نکن.</b> اگر کلمه‌ای یادت نیامد، دورش بزن (It's a kind of…) یا از جعبه‌ابزار روانی استفاده کن (Well, let me think…) و ادامه بده. درستی در این بخش مهم نیست؛ سرعت و پیوستگی مهم است.</div>`);
   const s8=step(8,"صحبت با ChatGPT Voice","۱۵ دقیقه",
-    `<div class="how"><ol><li>در ChatGPT یک چت <b>جدید</b> باز کن و این پرامپت را در باکس <b>متنی</b> Paste و ارسال کن.</li><li>بعد دکمهٔ Voice را بزن و گفتگو را شروع کن (پرامپت در همان چت می‌ماند).</li><li>حداقل ۱۵ دقیقه. هر وقت خواستی بگو <span class="en">"FEEDBACK"</span>.</li><li>بعد از گفتگو، متن چت را باز کن و ۳ اشتباه اصلی را در «دفتر من» وارد کن.</li></ol>پرامپت خودکار ساخته شده: ۵ مورد اصلی و ۵ پشتیبان امروز، مرور جلسه‌های قبل و گرامر ۷ جلسه پیش، پروفایل کاری و بانک جمله‌هایت، لیست سخت‌ها، اشتباه‌های دفتر خطا، تله‌های فارسی‌زبان‌ها و ضعف‌هایت.</div>
-    <div class="prompt"><button class="btn pri copy" data-copy>کپی پرامپت</button><pre>${esc(buildPrompt(s))}</pre></div>`,"gpt");
+    `<p class="small"><b>۱.</b> «باز کردن در ChatGPT» ← <b>۲.</b> دکمهٔ Voice ← <b>۳.</b> آخر کار بگو <span class="en">"FEEDBACK"</span> ← <b>۴.</b> Voice را ببند، تایپ کن <span class="en">REPORT</span> و جواب را در کادر پایین Paste کن.</p><div class="how">پرامپت خودکار ساخته شده: ۵ مورد اصلی و ۵ پشتیبان امروز، مرور جلسه‌های قبل و گرامر ۷ جلسه پیش، پروفایل کاری و بانک جمله‌هایت، لیست سخت‌ها، اشتباه‌های دفتر خطا، تله‌های فارسی‌زبان‌ها و ضعف‌هایت.</div>
+    ${gptBlock(buildPrompt(s))}${reportBox("session",n)}`,"gpt");
   const s9=step(9,"چالش پایانی (ضبط «بعد»)","۵ دقیقه",
     `<p>${esc(s.ch)}</p>${recBox("s"+n+":after","ضبط «بعد»",n===59?330:200,'data-compare="s'+n+':before" data-compare-label="قبل"')}${recBox("s"+n+":before","ضبط «قبل»",0,'data-readonly="1"')}<div class="how">با دکمهٔ ضبط، چالش را ضبط کن. برنامه مکث‌ها و طولانی‌ترین تکه را خودکار با ضبط «قبل» مقایسه می‌کند. هر دو را پشت سر هم گوش کن و ۲ تفاوت مشخص پیدا کن. اگر معیار را نگرفتی، فردا قبل از جلسهٔ بعد <b>فقط همین چالش</b> را دوباره انجام بده (حداکثر یک تکرار؛ بعد جلو برو).</div>
     <label class="check-line"><input type="checkbox" id="passed" ${ST.passed[n]?"checked":""}> معیار قبولی چالش را گرفتم</label>`,"challenge");
@@ -441,11 +544,11 @@ function renderReview(s){
   let groups="";
   items.forEach(o=>{ const sp=split(o); groups+=`<div class="srs-src"><div class="lbl">جلسهٔ ${fa(o.n)} — ${esc(o.t)}</div><div class="chips">${(s.final?sp.must:sp.core).map(chipHtml).join("")}</div></div>`; });
   const hard=hardList();
-  const s1=step(1,"آزمون‌های ثابت (مثل جلسهٔ صفر)","۲۲ دقیقه", benchmarkTests(n)+MEASURE_HOW+`<p>پرامپت تحلیل متن Task A، A2 و B:</p><div class="prompt"><button class="btn pri copy" data-copy>کپی پرامپت</button><pre>${esc(assessTranscriptPrompt())}</pre></div>`,"challenge");
+  const s1=step(1,"آزمون‌های ثابت (مثل جلسهٔ صفر)","۲۲ دقیقه", benchmarkTests(n)+MEASURE_HOW+`<p>پرامپت تحلیل متن Task A، A2 و B:</p>${gptBlock(assessTranscriptPrompt())}${reportBox("transcript",n)}`,"challenge");
   const s2=step(2,s.final?"مرور کل برنامه":"مرور فشردهٔ فاز","۱۵ دقیقه",
     `<div class="how"><b>روش:</b> روی هر مورد بزن؛ قبل از دیدن معنی، در ۵ ثانیه یک جملهٔ واقعی بگو و بعد «بلد بودم» یا «سخت بود» را بزن. این همان Task D است؛ تعداد «بلد بودم»ها را بشمار. ${s.final?"در مرور نهایی فقط ۵ مورد اصلی هر جلسه آمده؛ لازم نیست همه را امروز تمام کنی — ۳۰ مورد تصادفی برای Task D کافی است.":"فقط موارد اصلی و پشتیبان هر جلسه اینجا هستند."}</div><div class="srs-block">${groups}${hard.length?`<div class="srs-src" style="border-color:var(--amber)"><div class="lbl">لیست سخت‌ها (${fa(hard.length)})</div><div class="chips">${hard.map(x=>`<button class="chip on" data-star="${x.k}" title="${esc(x.it[1])} — ${esc(x.it[2])}">${esc(x.it[0])}</button>`).join("")}</div></div>`:""}</div>`);
   const s3=step(3,"مرور و آزمون شفاهی با ChatGPT Voice","۲۰ دقیقه",
-    `<div class="how">این پرامپت شامل Quiz یادآوری فعال، سؤال‌های ترکیبی از کل فاز، یک Role-play ارزیابی و گزارش نمره (همراه با تله‌های فارسی‌زبان‌ها) است. نمرهٔ Fluency و CEFR را در صفحهٔ پیشرفت ثبت کن.</div><div class="prompt"><button class="btn pri copy" data-copy>کپی پرامپت</button><pre>${esc(buildReviewPrompt(n))}</pre></div>`,"gpt");
+    `<div class="how">این پرامپت شامل Quiz یادآوری فعال، سؤال‌های ترکیبی از کل فاز، یک Role-play ارزیابی و گزارش نمره (همراه با تله‌های فارسی‌زبان‌ها) است. بعد از گفتگو، جواب REPORT را پایین همین بخش Paste کن تا Band روانی، CEFR و نتیجهٔ Quiz خودکار ثبت شوند.</div>${gptBlock(buildReviewPrompt(n))}${reportBox("review",n)}`,"gpt");
   const s4=step(4,"تله‌ها، ثبت عددها و تصمیم","۱۰ دقیقه",
     `<p><b>بررسی تله‌های فارسی‌زبان‌ها:</b> ضبط Task A و A2 را گوش کن و هر تله‌ای که هنوز در آن افتادی را در دفتر خطا ثبت کن.</p>${trapsTable()}
     <p>عددها را در <a href="#progress">صفحهٔ پیشرفت</a> (ردیف جلسهٔ ${fa(n)}) وارد کن. هدف‌های این مرحله:</p>${targetsTable(n)}
@@ -503,7 +606,8 @@ function renderGuide(){
   <section><h2>تله‌های فارسی‌زبان‌ها</h2><p class="small muted">این‌ها پرتکرارترین خطاهای فارسی‌زبان‌ها در صحبت‌اند. ChatGPT در همهٔ جلسه‌ها روی آن‌ها حساس است و در هر جلسهٔ مرور یک بار با ضبط خودت چکشان می‌کنی.</p>${trapsTable()}</section>
 
   <section><h2>استفاده از ChatGPT Voice</h2><ul>
-  <li>پرامپت هر جلسه را در یک <b>چت جدید</b> و در <b>باکس متنی</b> Paste کن، ارسال کن، <b>بعد</b> دکمهٔ Voice را بزن. پرامپت بلند را با صدا نخوان.</li>
+  <li>دکمهٔ <b>«باز کردن در ChatGPT»</b> پرامپت جلسه را در یک چت جدید می‌فرستد (و کپی هم می‌کند). بعد دکمهٔ Voice را بزن. اگر پرامپت نرسید، فقط Paste کن و بفرست. پرامپت بلند را با صدا نخوان.</li>
+  <li>بعد از گفتگو، Voice را ببند و تایپ کن <span class="en">REPORT</span>. جواب را در کادر «برگرداندن گزارش» همان جلسه Paste کن: نمره‌ها در «پیشرفت» جمع می‌شوند و اشتباه‌ها خودکار به دفتر خطا می‌روند. در ارزیابی‌ها، WPM، خطا در دقیقه، Band و CEFR هم خودکار وارد جدول می‌شوند.</li>
   <li>اگر وسط کار ChatGPT قوانین را فراموش کرد (مثلاً زیاد حرف زد یا تصحیح نکرد)، بگو: <span class="en">"Remember the rules: short turns, correct my mistakes."</span></li>
   <li>در پایان بگو <span class="en">"FEEDBACK"</span>. بعد از بستن Voice، بازخورد به صورت متن در چت هست؛ از آنجا دفتر خطا را پر کن.</li>
   <li>اگر در حالت Voice صدایت را اشتباه متن می‌کند، معمولاً یعنی تلفظ آن کلمه واضح نیست — آن کلمه را در دفتر خطا با نوع «تلفظ» ثبت کن.</li></ul></section>
@@ -548,8 +652,8 @@ function renderAssess(){
   <p class="lead">این ارزیابی دو کار می‌کند: (۱) یک <b>خط پایه با عدد</b> می‌سازد که هر ۱۰ جلسه با همان آزمون‌ها مقایسه می‌شود، (۲) ضعف‌های اصلی‌ات را پیدا می‌کند تا برنامه روی آن‌ها «تمرین اضافه» بگذارد و ChatGPT روی همان‌ها سخت‌گیرتر باشد. قبل از شروع، <a href="#errors">پروفایل کاری</a>‌ات را پر کن تا پرامپت‌ها دربارهٔ کار واقعی خودت باشند.</p>
 
   ${step(1,"ضبط سه تک‌گویی (بدون آمادگی)","۱۲ دقیقه",`${benchmarkTests(0)}${MEASURE_HOW}`,"challenge")}
-  ${step(2,"تحلیل متن ضبط‌ها با ChatGPT","۱۰ دقیقه",`<p>متن Task A، A2 و B را در جای خودشان Paste کن و پرامپت را در یک چت جدید بفرست. جدول Error Log خروجی را در <a href="#errors">دفتر من</a> وارد کن.</p><div class="prompt"><button class="btn pri copy" data-copy>کپی پرامپت</button><pre>${esc(assessTranscriptPrompt())}</pre></div>`)}
-  ${step(3,"آزمون شفاهی شبیه IELTS با ChatGPT Voice","۱۵ دقیقه",`<p>این بخش تلفظ، تعامل و سرعت واکنش را می‌سنجد (چیزهایی که از روی متن معلوم نمی‌شود). در چت جدید Paste کن، بعد Voice را بزن. در پایان بگو <span class="en">"RESULTS"</span>.</p><div class="prompt"><button class="btn pri copy" data-copy>کپی پرامپت</button><pre>${esc(assessVoicePrompt())}</pre></div>`,"gpt")}
+  ${step(2,"تحلیل متن ضبط‌ها با ChatGPT","۱۰ دقیقه",`<p>متن Task A، A2 و B را در جای خودشان Paste کن و پرامپت را در یک چت جدید بفرست. بعد جواب کامل را در کادر زیر Paste کن تا WPM، خطا در دقیقه و Error Log خودکار ثبت شوند.</p>${gptBlock(assessTranscriptPrompt())}${reportBox("transcript",0)}`)}
+  ${step(3,"آزمون شفاهی شبیه IELTS با ChatGPT Voice","۱۵ دقیقه",`<p>این بخش تلفظ، تعامل و سرعت واکنش را می‌سنجد (چیزهایی که از روی متن معلوم نمی‌شود). در چت جدید Paste کن، بعد Voice را بزن. در پایان بگو <span class="en">"RESULTS"</span>، بعد Voice را ببند و تایپ کن <span class="en">REPORT</span>.</p>${gptBlock(assessVoicePrompt())}${reportBox("voice",0)}`,"gpt")}
   ${step(4,"خودارزیابی «می‌توانم…»","۵ دقیقه",`<p class="small muted">به هر جمله از ۱ (اصلاً) تا ۵ (کاملاً) نمره بده. ستون ۶۰ را در جلسهٔ آخر پر می‌کنی.</p><div class="tbl"><table class="cando"><thead><tr><th>جمله</th><th>جلسهٔ ۰</th><th>جلسهٔ ۶۰</th></tr></thead><tbody>${rows}<tr><td><b>جمع</b></td><td class="kpi">${sum(0)}</td><td class="kpi">${sum(60)}</td></tr></tbody></table></div>`)}
   ${step(5,"تشخیص: روی چه چیزی بیشتر تمرکز کنی؟","۵ دقیقه",`<p>بر اساس بخش ۵ تحلیل ChatGPT (۳ ضعف اصلی) و نمره‌های پایین خودارزیابی، <b>حداکثر ۲</b> مورد را انتخاب کن. انتخابت در هر جلسه یک «تمرین اضافهٔ ۵ دقیقه‌ای» نشان می‌دهد و به همهٔ پرامپت‌های ChatGPT اضافه می‌شود. بعد از هر جلسهٔ مرور می‌توانی تغییرش بدهی.</p>
   <div class="tbl"><table><thead><tr><th></th><th>ضعف</th><th>نشانه‌اش</th><th>چه چیزی به برنامه اضافه می‌شود</th></tr></thead><tbody>
@@ -623,6 +727,7 @@ function renderProgress(){
   <div class="tbl"><table><thead><tr><th>نقطهٔ سنجش</th>${MET.map(([,l])=>`<th>${l}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>
   <div class="how"><b>هدف‌های کلی تا جلسهٔ ۶۰:</b> WPM حداقل ۳۰٪ بیشتر از خط پایه (یا ۱۳۰+) · حداکثر ۱ مکث بیش از ۳ ثانیه در ۲ دقیقه · تکه‌های پیوستهٔ حداقل ۴۵ ثانیه‌ای · حداکثر ۳ Filler در دقیقه · نصف شدن خطاها در دقیقه · Recall حداقل ۸۰٪ · فهم ۸۰٪ یک قسمت 6 Minute English بدون زیرنویس · اعتمادبه‌نفس ۳ واحد بالاتر · یک صحبت پیوستهٔ ۵ دقیقه‌ای (جلسهٔ ۵۹). راهنمای اندازه‌گیری در جلسهٔ صفر است.</div>
   ${delta}
+  ${scoresSection()}
   <h2>جلسه‌های انجام‌شده</h2>
   <p class="kpi">${fa(Object.keys(ST.done).filter(k=>ST.done[k]).length)} از ۶۰ جلسه · چالش‌های قبول‌شده: ${fa(Object.keys(ST.passed).filter(k=>ST.passed[k]).length)} · موارد لیست سخت‌ها: ${fa(hardList().length)} · اشتباه‌های حل‌نشده: ${fa((ST.err||[]).filter(e=>!e.done).length)} · جمله‌های بانک: ${fa((ST.phrases||[]).length)}</p>
   <h2>ذخیره‌سازی و پشتیبان</h2>
@@ -641,7 +746,12 @@ function renderProgress(){
 
 /* ======================= Events ======================= */
 function bind(view,n){
-  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{ copyText(b.parentElement.querySelector("pre").textContent,b); if("backup" in b.dataset){ ST.lastBackup=Date.now(); save(); } }));
+  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{ copyText((b.closest(".prompt")||b.parentElement).querySelector("pre").textContent,b); if("backup" in b.dataset){ ST.lastBackup=Date.now(); save(); } }));
+  document.querySelectorAll("[data-gptopen]").forEach(a=>a.addEventListener("click",()=>{ const pre=a.closest(".prompt").querySelector("pre"); try{ navigator.clipboard.writeText(pre.textContent).catch(()=>{}); }catch(e){} }));
+  document.querySelectorAll("[data-reportsave]").forEach(b=>b.addEventListener("click",()=>{ const box=b.closest(".report"), ta=box.querySelector("[data-reporttext]"), msg=box.querySelector("[data-reportmsg]");
+    const res=saveReport(box.dataset.report, +box.dataset.n, ta.value);
+    if(!res.ok){ msg.textContent="گزارشی پیدا نشد. مطمئن شو جواب REPORT را کامل کپی کرده‌ای."; msg.className="small bad"; return; }
+    ta.value=""; msg.textContent="ثبت شد ✓"; msg.className="small ok"; box.querySelector("[data-reportsum]").innerHTML=reportSummary(res.rec); }));
   document.querySelectorAll("[data-snooze]").forEach(b=>b.addEventListener("click",()=>{ ST[b.dataset.snooze+"Snooze"]=Date.now(); save(); route(true); }));
   document.querySelectorAll("[data-install]").forEach(b=>b.addEventListener("click",async ()=>{ if(!INSTALL_PROMPT) return; INSTALL_PROMPT.prompt(); try{ await INSTALL_PROMPT.userChoice; }catch(e){} INSTALL_PROMPT=null; route(true); }));
   const bf=$("#backup-file"); if(bf) bf.addEventListener("click",()=>saveBackupFile(bf));
