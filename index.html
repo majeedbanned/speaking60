@@ -208,6 +208,7 @@ details.step.isdone > summary .n{background:var(--good); color:#fff}
 
 .s-head .kick{display:none}
 
+input::placeholder, textarea::placeholder{color:var(--muted); opacity:.55}
 .tags{display:flex; gap:6px; margin-top:3px; flex-wrap:wrap}
 .tag{font-size:11px; padding:0 8px; border-radius:999px; background:var(--surface-2); color:var(--muted); line-height:1.8}
 .tag.rec{background:var(--amber-soft); color:var(--amber)}
@@ -855,7 +856,7 @@ function renderErrors(){
   return `<div class="doc" style="margin-top:24px">
   <h1>دفتر من</h1>
   <section class="card"><h2>پروفایل کاری</h2><p class="small muted">یک بار پر کن (انگلیسی، کوتاه). همهٔ پرامپت‌های ChatGPT از این به بعد سؤال‌ها و Role-playها را با کار واقعی تو تطبیق می‌دهند.</p>
-  <form id="profform" class="pgrid">${PROFILE_FIELDS.map(([k,l,ph_])=>`<label>${l}<input type="text" class="en" id="pf-${k}" value="${esc(p[k]||"")}" placeholder="${esc(ph_)}"></label>`).join("")}
+  <form id="profform" class="pgrid">${PROFILE_FIELDS.map(([k,l,ph_])=>`<label>${l}<input type="text" class="en" id="pf-${k}" value="${esc(p[k]||"")}" placeholder="e.g. ${esc(ph_)}"></label>`).join("")}
   <div class="row"><button class="btn pri" type="submit">ذخیرهٔ پروفایل</button><span id="prof-msg" class="small"></span></div></form></section>
 
   <section class="card"><h2>بانک جمله‌های کاری من (${fa(ph.length)})</h2><p class="small muted">جمله‌هایی که واقعاً هر هفته سر کار می‌گویی یا لازم داری (Stand-up، جلسه، ایمیل شفاهی، تماس). هدف تا آخر برنامه: حداقل ۳۰ جمله. ۸ جملهٔ آخر خودکار به پرامپت ChatGPT اضافه می‌شوند تا در گفتگو تمرینشان کنی.</p>
