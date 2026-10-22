@@ -1,9 +1,31 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>شصت جلسه تا روانی</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400&display=swap">
+<meta name="description" content="برنامهٔ ۶۰ جلسه‌ای قدم‌به‌قدم برای Speaking انگلیسی در محیط کار">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0D6B62">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Speaking60">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="fonts/vazirmatn-var.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}
+img{max-width:100%}
+[hidden]:not([hidden=until-found i]){display:none!important}
+
+@font-face{font-family:"Vazirmatn"; src:url("fonts/vazirmatn-var.woff2") format("woff2"); font-weight:100 900; font-display:swap}
+@font-face{font-family:"Source Sans 3"; src:url("fonts/source-sans-3-var.woff2") format("woff2"); font-weight:200 900; font-style:normal; font-display:swap}
+@font-face{font-family:"Source Sans 3"; src:url("fonts/source-sans-3-var-italic.woff2") format("woff2"); font-weight:200 900; font-style:italic; font-display:swap}
+@font-face{font-family:"JetBrains Mono"; src:url("fonts/jetbrains-mono-400.woff2") format("woff2"); font-weight:400; font-display:swap}
+
 :root{
   --bg:#F2F4F3; --surface:#FFFFFF; --surface-2:#E9EEEC; --ink:#14201C; --muted:#56675F; --line:#D3DDD8;
   --accent:#0D6B62; --accent-ink:#FFFFFF; --accent-soft:#D6ECE7;
@@ -224,15 +246,35 @@ input::placeholder, textarea::placeholder{color:var(--muted); opacity:.55}
 .phlist .btn{padding:1px 8px; font-size:12px}
 section.card h2{margin-bottom:4px}
 .sb > .sub{margin-top:6px}
-</style>
 
+/* pronunciation audio, recorder, banners */
+.say{border:0; background:none; padding:0 4px; margin:0 2px; font-size:15px; line-height:1; cursor:pointer; vertical-align:middle}
+html.no-tts .say{display:none}
+.pron .pitem{display:inline-flex; align-items:center; gap:4px}
+.pron .pitem a{border:0; padding:0; background:none; color:var(--accent)}
+.ttsbar{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
+.ttsbar .btn{padding:2px 10px}
+.ttsbar .btn.on{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.rec{border:1px dashed var(--line); border-radius:8px; padding:8px 10px; display:grid; gap:6px; margin-top:6px}
+.recbtn{background:var(--rec); color:#fff; border-color:var(--rec); font-weight:700}
+.rec .meter{height:6px; background:var(--surface-2); border-radius:99px; overflow:hidden}
+.rec .meter i{display:block; height:100%; width:0; background:var(--rec)}
+.rec audio{width:100%; height:38px}
+.rec .cmp{color:var(--good)}
+.banner{border:1px solid var(--amber); background:var(--amber-soft); border-radius:8px; padding:10px 14px; margin-top:10px; display:grid; gap:4px; font-size:14px}
+.banner .btn{justify-self:start}
+.btn.small{padding:2px 10px; font-size:13px}
+.morelist .card{display:grid; gap:4px}
+
+</style>
+</head>
+<body>
 <header class="top"><div class="bar">
   <div class="brand"><span class="wave" aria-hidden="true"><i style="height:10px"></i><i style="height:20px"></i><i style="height:14px"></i><i style="height:22px"></i></span>شصت جلسه تا روانی</div>
   <nav class="tabs" id="tabs"></nav>
 </div></header>
 <div class="wrap" id="app"></div>
 <script>
-document.documentElement.setAttribute("dir","rtl"); document.documentElement.setAttribute("lang","fa");
 const SESSIONS = [];
 function S(o){ SESSIONS[o.n] = o; }
 S({"n": 1, "ph": 1, "t": "معرفی خودت و شغلت", "en": "Introducing yourself and your job", "goal": "در ۶۰ ثانیه، بدون مکث طولانی، خودت، نقشت و کاری که این روزها انجام می‌دهی را معرفی کنی.", "v": [["role", "نقش، سِمت", "My role is mostly technical."], ["responsible for", "مسئولِ (کاری)", "I'm responsible for the backend."], ["in charge of", "سرپرستِ، عهده‌دارِ", "She's in charge of sales."], ["background", "سابقه، پیشینه", "I have a background in computer science."], ["client", "مشتری سازمانی", "Most of our clients are schools."], ["field", "حوزهٔ کاری", "I've been in this field for ten years."], ["currently", "در حال حاضر", "I'm currently working on a mobile app."], ["mostly", "عمدتاً", "I mostly work from home."]], "pv": [["work on", "روی چیزی کار کردن", "I'm working on a new feature."], ["deal with", "رسیدگی کردن، سروکار داشتن", "I deal with a lot of customer requests."], ["set up", "راه‌اندازی کردن", "I set up the company in 2018."], ["end up", "در نهایت سر از جایی درآوردن", "I studied physics but ended up in software."]], "ex": [["What do you do (for a living)?", "سؤال طبیعیِ «شغلت چیه؟»", "— What do you do? — I'm a software developer."], ["I work in / at / for ...", "in = حوزه، at = محل، for = شرکت", "I work in ed-tech, for a small startup."], ["Basically, ...", "برای ساده کردن توضیح", "Basically, I build tools for schools."], ["The main part of my job is ...", "بخش اصلی کارم …", "The main part of my job is solving problems."], ["It's a bit hard to explain, but ...", "وقتی توضیح سخت است", "It's a bit hard to explain, but I connect systems."], ["What about you?", "برگرداندن سؤال", "That's what I do. What about you?"]], "g": {"t": "Present Simple vs Present Continuous", "fa": "Present Simple برای چیزهای ثابت و همیشگی (نقش، عادت، واقعیت). Present Continuous برای کارهای موقتیِ «این روزها». در معرفی شغلی هر دو را کنار هم لازم داری.", "ex": ["I manage a team of developers. (همیشگی)", "This month I'm working on a payment system. (موقت)", "We usually release on Sundays, but this week we're releasing on Tuesday."], "drill": "۱۰ جمله دربارهٔ کار خودت بگو، ننویس: ۵ تا با Simple (همیشگی) و ۵ تا با Continuous (این روزها). اگر بیشتر از ۵ ثانیه مکث کردی، جمله را ساده‌تر کن."}, "li": {"t": "BBC — English at Work 04: Introduce yourself and make some friends (4 min)", "u": "https://www.youtube.com/watch?v=1AmS9h8g3E4", "seg": "کل ویدیو (۴ دقیقه)", "dialog": true, "task": "یک دیالوگ واقعی محیط کار دربارهٔ آشنایی. نقش یکی از شخصیت‌ها را Shadow کن."}, "pr": {"t": "Word stress — تکیهٔ کلمه", "fa": "فارسی‌زبان‌ها معمولاً تکیه را روی هجای آخر می‌گذارند. در انگلیسی جای تکیه ثابت نیست و اگر اشتباه باشد، کلمه سخت‌تر فهمیده می‌شود. هجای بزرگ‌شده را بلندتر، کشیده‌تر و با صدای بالاتر بگو.", "items": ["deVELop", "COMpany", "MANager", "engiNEER", "exPERience", "reSPONsible", "techNOLogy", "CUStomer"]}, "fl": "Self-intro ladder (روش ۴/۳/۲): معرفی خودت را ۳ بار پشت سر هم بگو: اول در ۹۰ ثانیه، بعد ۶۰ ثانیه، بعد ۴۵ ثانیه. محتوا ثابت است؛ فقط سریع‌تر و روان‌تر می‌شود.", "rp": {"scene": "We are at a tech networking event and we have just met. Ask about my job, my company, my background and what I'm working on these days. At some point, mention that you work in a completely different industry and ask me to explain my job simply.", "role": "a friendly professional at a networking event"}, "qs": ["So, what do you do?", "How did you end up in this field?", "What does a typical day look like for you?", "What are you working on these days?", "What do you like most about your job?"], "ch": "یک معرفی ۶۰ ثانیه‌ای ضبط کن: اسم، نقش، مسئولیت‌ها، پروژهٔ فعلی و یک نکتهٔ جالب. معیار قبولی: حداقل ۴ عبارت از امروز، هیچ مکثی بیش از ۳ ثانیه، و Simple و Continuous درست به کار رفته باشند.", "work": "امشب کارهای امروزت را در ذهنت به انگلیسی مرور کن: «Today I worked on… I dealt with…».", "must": ["What do you do (for a living)?", "The main part of my job is ...", "responsible for", "work on", "end up"]});
@@ -295,6 +337,204 @@ S({"n": 57, "ph": 6, "t": "تماس با مشتری", "en": "Client calls: from 
 S({"n": 58, "ph": 6, "t": "صحبت بی‌مقدمه (Impromptu)", "en": "Impromptu speaking — thinking on your feet", "goal": "بدون آمادگی، دربارهٔ هر موضوعی ۱–۲ دقیقه ساختارمند حرف بزنی؛ مهارت نهایی برای «ترجمه نکردن در ذهن».", "v": [["spontaneous", "خودجوش", "I'm not very good at spontaneous speaking."], ["off the cuff", "بی‌مقدمه، فی‌البداهه", "I'll say a few words off the cuff."], ["structure", "ساختار", "Give your answer a clear structure."], ["ramble", "حاشیه رفتن، پراکنده‌گویی", "Sorry, I'm rambling — let me get to the point."], ["on the spot", "درجا، بی‌مقدمه", "He asked me on the spot, so I had no time to prepare."], ["gut feeling", "حس درونی", "My gut feeling says it's a bad idea."], ["conclude", "نتیجه گرفتن", "To conclude, …"], ["tricky", "دشوار، زیرکانه", "That's a tricky question."]], "pv": [["think on your feet", "سریع و درجا فکر کردن", "In interviews, you need to think on your feet."], ["come to mind", "به ذهن رسیدن", "The first thing that comes to mind is…"], ["draw a blank", "هیچ چیز یادم نیامد", "I completely drew a blank."], ["spring to mind", "ناگهان به ذهن رسیدن", "Nothing springs to mind right now."]], "ex": [["That's an interesting question. I'd say ...", "سؤال جالبی است. می‌گویم …", "That's an interesting question. I'd say yes, mostly."], ["There are two ways to look at it.", "از دو زاویه می‌شود نگاه کرد", "There are two ways to look at it."], ["The first thing that comes to mind is ...", "اولین چیزی که به ذهنم می‌رسد …", "The first thing that comes to mind is my father."], ["A good example of this is ...", "مثال خوبش …", "A good example of this is what happened last year."], ["So, all in all, ...", "خلاصه در مجموع …", "So, all in all, I think it's worth it."], ["I've never really thought about it before, but ...", "هیچ‌وقت فکرش را نکرده بودم، اما …", "I've never really thought about it before, but maybe…"]], "g": {"t": "Mixed review: flexible tense switching", "fa": "در صحبت بی‌مقدمه، معمولاً باید در یک جواب بین حال، گذشته و آینده جابه‌جا شوی: نظر فعلی (حال)، مثال (گذشته)، پیش‌بینی (آینده). این جلسه تمرین همین جابه‌جایی است.", "ex": ["I think it's important. (present)", "When I was a student, I didn't care about it. (past)", "I've changed my mind since then. (present perfect)", "In the future, I'll probably… (future)"], "drill": "به ۴ سؤال جواب بده و در هر جواب حداقل ۳ زمان مختلف استفاده کن: Money? Friendship? Technology? Your city?"}, "li": {"t": "Robert Waldinger — What makes a good life?", "u": "https://www.ted.com/talks/robert_waldinger_what_makes_a_good_life_lessons_from_the_longest_study_on_happiness", "task": "آرام، واضح و عمیق. ۶۰ ثانیه Shadow؛ بدون آمادگی ۹۰ ثانیه دربارهٔ «زندگی خوب از نظر من» صحبت کن.", "seg": "۰:۰۰ تا ۳:۰۰"}, "pr": {"t": "Overall rhythm check (stress-timed English)", "fa": "انگلیسی زبانی «تکیه‌محور» است: فاصلهٔ بین تکیه‌ها تقریباً یکسان است و کلمات بی‌تکیه فشرده می‌شوند. جملهٔ زیر را با ضرب دست (روی تکیه‌ها) بگو.", "items": ["CATS / CHASE / MICE.", "The CATS / have CHASED / the MICE.", "The CATS / have been CHASing / the MICE.", "I THINK / it's a GOOD / iDEA."]}, "fl": "Random topic roulette: ۱۰ موضوع تصادفی (از لیست زیر یا از ChatGPT) — ۵ ثانیه فکر و ۶۰ ثانیه صحبت با ساختار: جواب → دلیل → مثال → جمع‌بندی. موضوعات: rain, your first job, a smell you love, money, the best age, silence, your phone, teachers, a mistake, the future of cities.", "rp": {"scene": "This is an impromptu speaking challenge. Give me random topics and questions (serious, funny, philosophical, work-related) one at a time. I have 5 seconds to think and then must speak for about 60 seconds. After each answer, give me a quick score for structure, fluency and vocabulary, and one tip. Increase the difficulty as we go.", "role": "an impromptu speaking coach"}, "qs": ["If you could have dinner with anyone, who would it be?", "What's something most people are wrong about?", "Describe the perfect workday.", "Is it better to be a generalist or a specialist?", "What would you tell your 20-year-old self?"], "ch": "۳ موضوع تصادفی (از ChatGPT بخواه) — هر کدام ۵ ثانیه فکر و ۶۰ ثانیه صحبت، ضبط کن. معیار قبولی: هیچ مکث بیش از ۳ ثانیه، ساختار ۴ مرحله‌ای، و حداقل ۲ زمان مختلف در هر جواب.", "work": "هر روز در راه یا زمان استراحت، یک موضوع تصادفی انتخاب کن و ۶۰ ثانیه (زیر لب) دربارهٔ آن حرف بزن.", "must": ["That's an interesting question. I'd say ...", "There are two ways to look at it.", "The first thing that comes to mind is ...", "So, all in all, ...", "think on your feet"]});
 S({"n": 59, "ph": 6, "t": "داستان شغلی و «صحبت طولانی»", "en": "Your career story — the long turn", "goal": "۵ دقیقه پیوسته دربارهٔ مسیر حرفه‌ای‌ات صحبت کنی — با قصه، عدد، احساس، درس و آینده — و همهٔ مهارت‌های ۶۰ جلسه را ترکیب کنی.", "v": [["journey", "سفر، مسیر", "It's been quite a journey."], ["turning point", "نقطهٔ عطف", "That was a turning point in my career."], ["setback", "عقب‌گرد، شکست موقت", "We had a few setbacks."], ["vision", "چشم‌انداز", "My vision is to make school admin easy."], ["purpose", "هدف، رسالت", "I've found my purpose."], ["mentor", "مربی، راهنما", "My first boss was a great mentor."], ["pivot", "تغییر مسیر (کسب‌وکار)", "We had to pivot in 2020."], ["legacy", "میراث، اثر ماندگار", "What legacy do you want to leave?"]], "pv": [["start out", "شروع کردن (مسیر)", "I started out as a junior developer."], ["branch out", "شاخه زدن، گسترش دادن", "Later, I branched out into management."], ["look ahead", "به آینده نگاه کردن", "Looking ahead, we want to expand abroad."], ["carve out (a niche)", "برای خود جا باز کردن (در بازار)", "We carved out a niche in school software."]], "ex": [["It all started when ...", "همه چیز وقتی شروع شد که …", "It all started when a school asked me for help."], ["Little did I know that ...", "اصلاً نمی‌دانستم که …", "Little did I know that it would become my career."], ["Looking back, I realize ...", "حالا که نگاه می‌کنم می‌فهمم …", "Looking back, I realize it was the right move."], ["The biggest lesson I've learned is ...", "بزرگ‌ترین درسی که گرفته‌ام …", "The biggest lesson I've learned is to listen to users."], ["Where I see myself in five years is ...", "جایی که خودم را ۵ سال بعد می‌بینم …", "Where I see myself in five years is leading a global product."], ["What drives me is ...", "چیزی که مرا پیش می‌برد …", "What drives me is seeing teachers save time."]], "g": {"t": "All tenses in one narrative + inversion for drama", "fa": "داستان شغلی همهٔ زمان‌ها را لازم دارد. برای جذابیت، یک ساختار ادبی ساده هم اضافه کن: Little did I know… / Never had I… / Not only did we…, but…", "ex": ["Little did I know that this would change my life.", "Not only did we survive, but we also grew by 200%.", "I had been working there for five years when I decided to leave.", "By 2030, we'll have reached every school in the country."], "drill": "مسیر شغلی‌ات را در ۸ جمله بگو: ۸ جمله با ۸ زمان مختلف + ۲ جملهٔ Little did I know / Not only… but also."}, "li": {"t": "Ken Robinson — Do schools kill creativity?", "u": "https://www.ted.com/talks/ken_robinson_do_schools_kill_creativity", "task": "پربیننده‌ترین تاک TED و دربارهٔ آموزش — استاد قصه‌گویی و طنز بریتانیایی. ۶۰ ثانیه Shadow و ۲ دقیقه نظرت دربارهٔ ایده‌اش.", "seg": "۰:۰۰ تا ۳:۰۰"}, "pr": {"t": "Long-turn pacing & breath", "fa": "برای صحبت ۵ دقیقه‌ای: نفس را در مرز thought groupها بگیر، سرعت ثابت ۱۳۰–۱۵۰ کلمه در دقیقه، و در انتقال بین بخش‌ها ۲ ثانیه مکث. صدا را تا آخر جمله نگه دار (انتهای جمله‌ها محو نشود).", "items": ["It all started | when a school | asked me for help.", "Little did I know | (breath) | that it would become my career.", "Looking back, | I realize | it was the right move."]}, "fl": "5-minute nonstop: یک تایمر ۵ دقیقه‌ای بگذار و دربارهٔ «زندگی و کار من» بی‌وقفه حرف بزن. اگر ایستادی، با So anyway… یا Another thing is… ادامه بده.", "rp": {"scene": "You are a podcast host interviewing me for a show about founders and tech leaders. Ask me to tell my career story from the beginning: how I started, turning points, setbacks, lessons, what drives me and my vision for the future. Let me speak for long stretches (1–2 minutes each); only interrupt to ask a deeper follow-up. At the end, tell me which parts of my story were most engaging.", "role": "a podcast host interviewing me"}, "qs": ["Take us back to the beginning. How did it all start?", "What was the biggest turning point?", "Tell us about a setback and how you got through it.", "What drives you today?", "Where do you see yourself and your company in five years?"], "ch": "داستان شغلی‌ات را در ۵ دقیقهٔ پیوسته ضبط کن. معیار قبولی: شروع جذاب، حداقل یک نقطهٔ عطف و یک شکست، ۱ عدد یا دستاورد، ۱ درس، چشم‌انداز آینده و کمتر از ۵ مکث بالای ۳ ثانیه در کل.", "work": "این ضبط را نگه دار — در جلسهٔ ۶۰ با ضبط جلسهٔ ارزیابی مقایسه‌اش می‌کنی.", "must": ["It all started when ...", "Little did I know that ...", "Looking back, I realize ...", "What drives me is ...", "turning point"]});
 S({"n": 60, "ph": 6, "review": true, "final": true, "t": "ارزیابی نهایی و برنامهٔ ادامه", "en": "Final assessment & your plan after 60"});
+/* ======================= Durable storage: IndexedDB mirror of the state + recordings ======================= */
+const IDB = (()=>{
+  let dbp=null;
+  function open(){
+    if(dbp) return dbp;
+    dbp = new Promise((res,rej)=>{
+      if(!("indexedDB" in window)) return rej(new Error("no indexedDB"));
+      const r = indexedDB.open("sp60",1);
+      r.onupgradeneeded = ()=>{ const db=r.result; if(!db.objectStoreNames.contains("kv")) db.createObjectStore("kv"); if(!db.objectStoreNames.contains("rec")) db.createObjectStore("rec"); };
+      r.onsuccess = ()=>res(r.result); r.onerror = ()=>rej(r.error);
+    });
+    return dbp;
+  }
+  async function tx(store, mode, fn){
+    const db = await open();
+    return new Promise((res,rej)=>{ const t=db.transaction(store,mode); let out; const q=fn(t.objectStore(store)); if(q) q.onsuccess=()=>{ out=q.result; }; t.oncomplete=()=>res(out); t.onerror=()=>rej(t.error); t.onabort=()=>rej(t.error); });
+  }
+  return { get:(s,k)=>tx(s,"readonly",o=>o.get(k)), put:(s,k,v)=>tx(s,"readwrite",o=>o.put(v,k)), del:(s,k)=>tx(s,"readwrite",o=>o.delete(k)), keys:s=>tx(s,"readonly",o=>o.getAllKeys()) };
+})();
+const DAY = 86400000;
+function reconcileState(){
+  IDB.get("kv","state").then(raw=>{
+    if(raw){ let o=null; try{ o=JSON.parse(raw); }catch(e){}
+      if(o && (o._ts||0) > (ST._ts||0)){ ST=Object.assign(defaultState(), o); try{ localStorage.setItem(KEY, raw); }catch(e){} route(true); }
+      else if((ST._ts||0) > ((o&&o._ts)||0)) IDB.put("kv","state",JSON.stringify(ST)).catch(()=>{});
+    } else if(ST._ts) IDB.put("kv","state",JSON.stringify(ST)).catch(()=>{});
+  }).catch(()=>{});
+}
+function requestPersist(){ try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(p=>{ if(!p) navigator.storage.persist(); }); }catch(e){} }
+const isStandalone = () => (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+let INSTALL_PROMPT = null;
+window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); INSTALL_PROMPT=e; if(document.querySelector("[data-install]")) route(true); });
+window.addEventListener("appinstalled", ()=>{ INSTALL_PROMPT=null; });
+function installHelp(){
+  if(isStandalone()) return `<p class="small"><b>برنامه نصب شده است ✓</b> داده‌هایت در فضای خود برنامه ذخیره می‌شوند.</p>`;
+  const ios = `در <b>Safari</b> دکمهٔ Share (مربع با فلش رو به بالا) را بزن و <b>Add to Home Screen</b> را انتخاب کن. از آن به بعد برنامه را از آیکن صفحهٔ اصلی باز کن.`;
+  const android = INSTALL_PROMPT ? `<button class="btn pri" data-install>نصب برنامه</button>` : `در Chrome از منوی ⋮ گزینهٔ <b>Install app</b> یا <b>Add to Home screen</b> را بزن.`;
+  return `<p class="small">${isIOS?ios:android}</p><p class="small muted">نکتهٔ آیفون: برنامهٔ نصب‌شده فضای ذخیره‌سازی جدا از Safari دارد. اگر قبلاً در Safari پیشرفتی ثبت کرده‌ای، اول از «پیشرفت» فایل پشتیبان بگیر و بعد از نصب، در برنامه برگردانش.</p>`;
+}
+function bannerBlock(){
+  const out=[]; const now=Date.now(); const doneCount=Object.keys(ST.done).filter(k=>ST.done[k]).length;
+  if(!isStandalone() && !(ST.installSnooze && now-ST.installSnooze<14*DAY))
+    out.push(`<div class="banner"><b>برنامه را روی گوشی نصب کن</b> تا بدون اینترنت باز شود و مرورگر پیشرفتت را پاک نکند (Safari داده‌های سایتی را که ۷ روز باز نشده پاک می‌کند).${installHelp()}<button class="btn small" data-snooze="install">بعداً</button></div>`);
+  const since = ST.lastBackup || ST.firstUse;
+  if(doneCount>=3 && since && now-since>7*DAY && !(ST.backupSnooze && now-ST.backupSnooze<3*DAY))
+    out.push(`<div class="banner"><b>بیش از ۷ روز است از پیشرفتت پشتیبان نگرفته‌ای.</b> <a href="#progress">گرفتن فایل پشتیبان ←</a> <button class="btn small" data-snooze="backup">بعداً</button></div>`);
+  return out.join("");
+}
+function backupFileName(){ const d=new Date(); const p=x=>String(x).padStart(2,"0"); return `speaking60-backup-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}.json`; }
+async function saveBackupFile(btn){
+  const text=JSON.stringify(ST); const name=backupFileName();
+  const blob=new Blob([text],{type:"application/json"});
+  try{
+    const file=new File([blob],name,{type:"application/json"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:"Speaking60 backup"}); markBackup(btn); return; }
+  }catch(e){ if(e && e.name==="AbortError") return; }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+  markBackup(btn);
+}
+function markBackup(btn){ ST.lastBackup=Date.now(); save(); if(btn) btn.textContent="پشتیبان گرفته شد ✓"; }
+
+/* ======================= Pronunciation audio (device text-to-speech, works offline) ======================= */
+const TTS = {
+  voice:null, ok:("speechSynthesis" in window) && typeof SpeechSynthesisUtterance!=="undefined",
+  init(){
+    if(!this.ok){ document.documentElement.classList.add("no-tts"); return; }
+    const pick=()=>{ const vs=speechSynthesis.getVoices().filter(v=>/^en[-_]US/i.test(v.lang));
+      const pref=["Samantha","Ava","Allison","Susan","Google US English","Microsoft Aria","Microsoft Jenny","Alex"];
+      this.voice = pref.map(p=>vs.find(v=>v.name.includes(p))).find(Boolean) || vs.find(v=>v.localService) || vs[0] || null; };
+    pick(); try{ speechSynthesis.addEventListener("voiceschanged", pick); }catch(e){ speechSynthesis.onvoiceschanged=pick; }
+  },
+  clean(t, lower){
+    let s=String(t).split("→")[0];
+    s=s.replace(/\/[^\s\/][^\/]*?\//g," ").replace(/[؀-ۿ‌]+/g," ").replace(/\(\s*\)/g," ").replace(/\((pause|slow|breath|sincere|sarcastic|surprised|sympathy|soft, slow)\)/gi," ");
+    s=s.replace(/\s\/\s/g,", ").replace(/\s+vs\s+/g,", ").replace(/\.\.\.|…|[↘↗→|~]/g," ").replace(/[()]/g," ").replace(/\s+/g," ").trim().replace(/^[,.\s]+|[,\s]+$/g,"");
+    if(!s || /[əɪæʌɑɔɜɝθðʃʒŋʊː]/.test(s) || !/[A-Za-z]/.test(s)) return null;
+    if(lower) s=s.replace(/\b(?!I\b)[A-Za-z']+\b/g, w=>w.toLowerCase());
+    return s;
+  },
+  btn(t, lower){ if(!this.ok) return ""; const c=this.clean(t, lower); return c?`<button class="say" type="button" data-say="${esc(c)}" aria-label="پخش تلفظ" title="پخش تلفظ">🔊</button>`:""; },
+  speak(text){
+    if(!this.ok) return; speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text); u.lang="en-US"; if(this.voice) u.voice=this.voice; u.rate=ST.ttsRate||1;
+    speechSynthesis.speak(u);
+  }
+};
+const rateBar = () => TTS.ok ? `<div class="ttsbar small">🔊 سرعت تلفظ: <button class="btn small ${(ST.ttsRate||1)===1?"on":""}" data-rate="1">عادی</button><button class="btn small ${(ST.ttsRate||1)<1?"on":""}" data-rate="0.7">آهسته</button></div>` : "";
+document.addEventListener("click", e=>{
+  const s=e.target.closest("[data-say]"); if(s){ e.preventDefault(); e.stopPropagation(); TTS.speak(s.dataset.say); return; }
+  const r=e.target.closest("[data-rate]"); if(r){ ST.ttsRate=+r.dataset.rate; save(); document.querySelectorAll("[data-rate]").forEach(b=>b.classList.toggle("on", +b.dataset.rate===ST.ttsRate)); }
+}, true);
+
+/* ======================= Voice recorder with automatic pause / longest-run analysis ======================= */
+const REC = {
+  active:null, urls:[],
+  supported: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder),
+  mime(){ const c=["audio/webm;codecs=opus","audio/mp4","audio/webm","audio/ogg;codecs=opus"]; try{ return c.find(m=>MediaRecorder.isTypeSupported(m))||""; }catch(e){ return ""; } },
+  analyze(levels, dt){
+    if(!levels || levels.length < 20) return null;
+    const sorted=[...levels].sort((a,b)=>a-b), q=p=>sorted[Math.min(sorted.length-1, Math.floor(p*sorted.length))];
+    const floor=q(0.15), peak=q(0.95);
+    if(peak < 0.004) return {silent:true};
+    const thr=Math.max(floor + (peak-floor)*0.18, floor*1.8);
+    const sp=levels.map(v=>v>thr);
+    const fill=(arr,val,maxLen)=>{ let i=0; while(i<arr.length){ if(arr[i]===val){ let j=i; while(j<arr.length && arr[j]===val) j++; const inner=i>0 && j<arr.length; if(inner && (j-i)<=maxLen) for(let k=i;k<j;k++) arr[k]=!val; i=j; } else i++; } };
+    fill(sp,false,Math.round(0.3/dt)); fill(sp,true,Math.round(0.15/dt));
+    const f=sp.indexOf(true), l=sp.lastIndexOf(true); if(f<0) return {silent:true};
+    let pauses3=0, longest=0, runStart=f, i=f;
+    while(i<=l){
+      if(!sp[i]){ let j=i; while(j<=l && !sp[j]) j++; const gap=(j-i)*dt;
+        if(gap>=3) pauses3++;
+        if(gap>=1){ longest=Math.max(longest,(i-runStart)*dt); runStart=j; }
+        i=j; } else i++;
+    }
+    longest=Math.max(longest,(l+1-runStart)*dt);
+    const talk=(l-f+1)*dt, speech=sp.slice(f,l+1).filter(Boolean).length*dt;
+    return {pauses3, longest:Math.round(longest), talk:Math.round(talk), ratio:Math.round(100*speech/Math.max(talk,0.1))};
+  },
+  fmt(sec){ sec=Math.max(0,Math.round(sec)); return fa(Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0")); },
+  async start(box){
+    if(this.active) this.stop();
+    const key=box.dataset.rec, limit=+box.dataset.limit||120;
+    const AC=window.AudioContext||window.webkitAudioContext; let ctx=null; try{ ctx=AC?new AC():null; }catch(e){}
+    let stream;
+    try{ stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}); }
+    catch(e){ if(ctx) ctx.close(); box.querySelector(".recmsg").textContent="دسترسی به میکروفون داده نشد. در تنظیمات مرورگر اجازهٔ میکروفون را برای این سایت روشن کن."; return; }
+    const levels=[], dt=0.05; let an=null, buf=null;
+    if(ctx){ try{ await ctx.resume(); const src=ctx.createMediaStreamSource(stream); an=ctx.createAnalyser(); an.fftSize=1024; src.connect(an); buf=new Float32Array(an.fftSize); }catch(e){ an=null; } }
+    const mime=this.mime(); let mr; try{ mr=new MediaRecorder(stream, mime?{mimeType:mime}:undefined); }catch(e){ mr=new MediaRecorder(stream); }
+    const chunks=[]; mr.ondataavailable=e=>{ if(e.data && e.data.size) chunks.push(e.data); };
+    const t0=performance.now();
+    box.innerHTML=`<div class="row"><button class="btn recbtn" type="button" data-recstop>■ توقف</button><span class="rectime kpi">${this.fmt(0)} / ${this.fmt(limit)}</span></div><div class="meter"><i></i></div>`;
+    box.querySelector("[data-recstop]").addEventListener("click",()=>this.stop());
+    const meter=box.querySelector(".meter i"), timeEl=box.querySelector(".rectime");
+    const tick=setInterval(()=>{
+      const el=(performance.now()-t0)/1000;
+      if(an){ an.getFloatTimeDomainData(buf); let s=0; for(let k=0;k<buf.length;k++) s+=buf[k]*buf[k]; const rms=Math.sqrt(s/buf.length); levels.push(rms); if(meter && meter.isConnected) meter.style.width=Math.min(100,rms*600)+"%"; }
+      if(timeEl && timeEl.isConnected) timeEl.textContent=`${this.fmt(el)} / ${this.fmt(limit)}`;
+      if(el>=limit) this.stop();
+    }, dt*1000);
+    this.active={key, mr, stream, ctx, tick, levels, dt, t0, mime:mr.mimeType||mime};
+    mr.onstop=async ()=>{
+      const a=this.active && this.active.key===key ? this.active : {levels, dt, t0, mime:mr.mimeType||mime};
+      const dur=(performance.now()-a.t0)/1000;
+      const blob=new Blob(chunks,{type:a.mime||"audio/webm"});
+      const m=an ? this.analyze(a.levels,a.dt) : null;
+      try{ await IDB.put("rec",key,{blob, mime:blob.type, dur:Math.round(dur), ts:Date.now(), m}); }catch(e){}
+      if(this.active && this.active.key===key) this.active=null;
+      document.querySelectorAll(`[data-rec="${key}"]`).forEach(b=>this.hydrate(b));
+      document.querySelectorAll(`[data-compare="${key}"]`).forEach(b=>this.hydrate(b));
+    };
+    mr.start(1000);
+  },
+  stop(){
+    const a=this.active; if(!a) return;
+    clearInterval(a.tick);
+    try{ if(a.mr.state!=="inactive") a.mr.stop(); }catch(e){}
+    try{ a.stream.getTracks().forEach(t=>t.stop()); }catch(e){}
+    try{ if(a.ctx) a.ctx.close(); }catch(e){}
+  },
+  metricsLine(m){ if(!m) return ""; if(m.silent) return `<span class="small muted">صدایی تشخیص داده نشد.</span>`; return `<span class="small">مکث‌های بالای ۳ ثانیه: <b>${fa(m.pauses3)}</b> · طولانی‌ترین تکهٔ بدون مکث: <b>${fa(m.longest)} ثانیه</b> · مدت صحبت: ${this.fmt(m.talk)}</span>`; },
+  async hydrate(box){
+    const key=box.dataset.rec, label=box.dataset.label||"ضبط", readonly=box.dataset.readonly==="1";
+    if(!this.supported && !readonly){ box.innerHTML=`<span class="small muted">ضبط داخل برنامه در این مرورگر پشتیبانی نمی‌شود؛ با ضبط‌کنندهٔ گوشی ضبط کن.</span>`; return; }
+    let rec=null; try{ rec=await IDB.get("rec",key); }catch(e){}
+    if(this.active && this.active.key===key) return;
+    if(!rec){
+      box.innerHTML = readonly ? `<span class="small muted">${esc(label)}: ضبطی ذخیره نشده.</span>` : `<div class="row"><button class="btn recbtn" type="button" data-recstart>● ${esc(label)}</button><span class="small muted">حداکثر ${this.fmt(+box.dataset.limit||120)}</span></div><div class="recmsg small"></div>`;
+      const b=box.querySelector("[data-recstart]"); if(b) b.addEventListener("click",()=>this.start(box));
+      return;
+    }
+    const url=URL.createObjectURL(rec.blob); this.urls.push(url);
+    let cmp="";
+    if(box.dataset.compare && rec.m && !rec.m.silent){ let o=null; try{ o=await IDB.get("rec",box.dataset.compare); }catch(e){}
+      if(o && o.m && !o.m.silent) cmp=`<div class="small cmp">${esc(box.dataset.compareLabel||"قبل")} ← حالا: مکث‌ها ${fa(o.m.pauses3)} ← <b>${fa(rec.m.pauses3)}</b> · طولانی‌ترین تکه ${fa(o.m.longest)} ← <b>${fa(rec.m.longest)}</b> ثانیه</div>`; }
+    const cp=box.dataset.cp;
+    box.innerHTML=`<div class="small"><b>${esc(label)}</b> · ${this.fmt(rec.dur)}</div><audio controls preload="metadata" src="${url}"></audio>${this.metricsLine(rec.m)}${cmp}${readonly?"":`<div class="row"><button class="btn small" type="button" data-recredo>ضبط دوباره</button><button class="btn small" type="button" data-recdel>حذف</button>${cp!=null&&cp!==""&&rec.m&&!rec.m.silent?`<button class="btn small" type="button" data-recmet>ثبت در جدول پیشرفت</button>`:""}</div>`}<div class="recmsg small"></div>`;
+    const redo=box.querySelector("[data-recredo]"); if(redo) redo.addEventListener("click",()=>this.start(box));
+    const del=box.querySelector("[data-recdel]"); if(del) del.addEventListener("click",async ()=>{ if(del.dataset.sure!=="1"){ del.dataset.sure="1"; del.textContent="مطمئنی؟ دوباره بزن"; return; } try{ await IDB.del("rec",key); }catch(e){} this.hydrate(box); });
+    const met=box.querySelector("[data-recmet]"); if(met) met.addEventListener("click",()=>{ ST.metrics[cp]=ST.metrics[cp]||{}; ST.metrics[cp].pauses=rec.m.pauses3; ST.metrics[cp].run=rec.m.longest; save(); met.textContent="ثبت شد ✓ (مکث‌ها و طولانی‌ترین تکه)"; });
+  },
+  mountAll(){ this.urls.forEach(u=>URL.revokeObjectURL(u)); this.urls=[]; document.querySelectorAll("[data-rec]").forEach(b=>this.hydrate(b)); }
+};
+const recBox = (key, label, limit, extra="") => `<div class="rec" data-rec="${key}" data-label="${esc(label)}" data-limit="${limit}" ${extra}></div>`;
+async function storageInfo(){
+  const el=document.getElementById("storage-info"); if(!el) return;
+  let persisted=null, usage=null, n=0;
+  try{ if(navigator.storage && navigator.storage.persisted) persisted=await navigator.storage.persisted(); }catch(e){}
+  try{ if(navigator.storage && navigator.storage.estimate){ const e=await navigator.storage.estimate(); usage=e.usage; } }catch(e){}
+  try{ n=(await IDB.keys("rec")).length; }catch(e){}
+  el.innerHTML=`ذخیره‌سازی پایدار: ${persisted===true?`<b class="ok">فعال ✓</b>`:persisted===false?`<b class="bad">فعال نیست</b> — برنامه را روی گوشی نصب کن`:"نامشخص"} · فضای استفاده‌شده: ${usage!=null?fa((usage/1048576).toFixed(1))+" مگابایت":"نامشخص"} · ضبط‌ها: ${fa(n)}`;
+}
+async function clearSessionRecordings(btn){
+  if(btn.dataset.sure!=="1"){ btn.dataset.sure="1"; btn.textContent="مطمئنی؟ دوباره بزن"; return; }
+  try{ const keys=await IDB.keys("rec"); for(const k of keys) if(String(k).startsWith("s")) await IDB.del("rec",k); }catch(e){}
+  btn.textContent="ضبط‌های جلسه‌ها حذف شد ✓"; storageInfo();
+}
 
 /* ======================= Phases & checkpoints ======================= */
 const PHASES = {
@@ -347,10 +587,11 @@ const KIT = {
 
 /* ======================= State (per-browser convenience) ======================= */
 const KEY="sp60_v1";
-let ST = {done:{}, passed:{}, hard:{}, focus:[], err:[], metrics:{}, cando:{}, profile:{}, phrases:[]};
+const defaultState = () => ({done:{}, passed:{}, hard:{}, focus:[], err:[], metrics:{}, cando:{}, profile:{}, phrases:[], ttsRate:1});
+let ST = defaultState();
 try{ const raw = localStorage.getItem(KEY); if(raw){ ST = Object.assign(ST, JSON.parse(raw)); } }catch(e){}
 ST.profile = ST.profile || {}; ST.phrases = ST.phrases || [];
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(ST)); }catch(e){} }
+function save(){ ST._ts=Date.now(); if(!ST.firstUse) ST.firstUse=ST._ts; const raw=JSON.stringify(ST); try{ localStorage.setItem(KEY, raw); }catch(e){} try{ IDB.put("kv","state",raw).catch(()=>{}); }catch(e){} }
 
 /* ======================= Helpers ======================= */
 const $ = s => document.querySelector(s);
@@ -373,7 +614,7 @@ function yg(t){
 }
 function pronHtml(t){
   const parts = / \/ /.test(t) ? t.split(" / ") : [t];
-  return parts.map(x=>{ const u=yg(x); return u?`<a href="${u}" target="_blank" rel="noopener">${esc(x)}</a>`:`<span>${esc(x)}</span>`; }).join("");
+  return parts.map(x=>{ const u=yg(x); return `<span class="pitem">${u?`<a href="${u}" target="_blank" rel="noopener">${esc(x)}</a>`:esc(x)}${TTS.btn(x,true)}</span>`; }).join("");
 }
 function pick(arr, count, seed){ const out=[]; if(!arr||!arr.length) return out; for(let i=0;i<Math.min(count,arr.length);i++){ out.push(arr[(seed+i)%arr.length]); } return out; }
 async function copyText(text, btn){
@@ -559,6 +800,8 @@ const TABS=[["today","امروز"],["list","جلسه‌ها"],["errors","دفت�
 let LASTN=1, CURN=null;
 function stepsDone(){ return (ST.steps&&ST.steps[CURN])||[]; }
 function route(keep){
+  if(REC.active) REC.stop();
+  if(TTS.ok) try{ speechSynthesis.cancel(); }catch(e){}
   const h=(location.hash||"").replace("#","");
   let view="today", n=null;
   if(/^s\d+$/.test(h)){ view="s"; n=Math.min(60,Math.max(1,parseInt(h.slice(1)))); }
@@ -578,6 +821,7 @@ function route(keep){
   if(n!=null) LASTN=n;
   bind(view,n);
   tidy();
+  REC.mountAll();
   const opened=openStep();
   if(keep && opened) opened.scrollIntoView({block:"start"});
   else if(!keep) window.scrollTo(0,0);
@@ -598,7 +842,7 @@ function renderList(){
 }
 function renderMore(){
   const card=(href,t,d)=>`<a class="card morecard" href="${href}"><b>${t}</b><span class="small muted">${d}</span></a>`;
-  return `<div class="morelist" style="margin-top:16px">
+  return `<div class="morelist" style="margin-top:16px"><div class="card"><b>نصب روی گوشی</b>${installHelp()}</div>
   ${card("#assess","ارزیابی اولیه","یک بار قبل از جلسهٔ ۱ — تعیین سطح و ضعف‌ها")}
   ${card("#errors","دفتر من","پروفایل کاری، بانک جمله‌ها، دفتر خطا و لیست سخت‌ها")}
   ${card("#progress","پیشرفت با عدد","ثبت عددهای ارزیابی‌ها و پشتیبان‌گیری")}
@@ -613,6 +857,7 @@ function renderSessionShell(n){
   <div class="progress-bar thin" aria-hidden="true"><i style="width:${Math.round(d/total*100)}%"></i></div>
   ${notAssessed?`<p class="small" style="margin:10px 0 0"><a href="#assess">قبل از شروع: ارزیابی اولیه (فقط یک بار) ←</a></p>`:""}
   ${profileEmpty()?`<p class="small" style="margin:6px 0 0"><a href="#errors">پروفایل کاری‌ات را پر کن تا گفتگوها دربارهٔ کار واقعی خودت باشد (۲ دقیقه) ←</a></p>`:""}
+  ${bannerBlock()}
   ${s.review?renderReview(s):renderSession(s)}${navRow(n)}</main></div>`;
 }
 function navRow(n){
@@ -632,7 +877,7 @@ function tidy(){
   document.querySelectorAll(".srs-src").forEach(s=>{ const r=document.createElement("div"); r.className="reveal"; r.hidden=true; s.appendChild(r); });
 }
 function itemList(arr){
-  return `<div class="items">${arr.map(e=>{ const x=e.it, k=e.key; return `<div class="item"><button class="star ${ST.hard[k]?"on":""}" data-star="${k}" title="سخت است / بلد نیستم — به لیست مرور اضافه شود" aria-label="علامت سخت">★</button><div><div class="top"><span class="w">${esc(x[0])}</span><span class="fa">${esc(x[1])}</span></div><div class="ex">${esc(x[2])}</div><div class="tags"><span class="tag">${TYPE_L[e.type]}</span>${e.rec?`<span class="tag rec">مرور از جلسهٔ ${fa(e.rec)}</span>`:""}</div></div></div>`; }).join("")}</div>`;
+  return `<div class="items">${arr.map(e=>{ const x=e.it, k=e.key; return `<div class="item"><button class="star ${ST.hard[k]?"on":""}" data-star="${k}" title="سخت است / بلد نیستم — به لیست مرور اضافه شود" aria-label="علامت سخت">★</button><div><div class="top"><span class="w">${esc(x[0])}</span>${TTS.btn(x[0])}<span class="fa">${esc(x[1])}</span></div><div class="ex">${TTS.btn(x[2])}${esc(x[2])}</div><div class="tags"><span class="tag">${TYPE_L[e.type]}</span>${e.rec?`<span class="tag rec">مرور از جلسهٔ ${fa(e.rec)}</span>`:""}</div></div></div>`; }).join("")}</div>`;
 }
 const chipHtml = e => `<button class="chip ${ST.hard[e.key]?"on":""}" data-star="${e.key}" title="${esc(e.it[1])} — ${esc(e.it[2])}">${esc(e.it[0])}</button>`;
 function srsBlock(n){
@@ -655,9 +900,9 @@ function focusBlock(){
 const repeatOf = n => (n>=8 && n%2===0) ? contentBefore(n-7) : 0;
 function coldBlock(s){
   const n=s.n, m=repeatOf(n);
-  let h=`<p><b>قبل از هر یادگیری، همین الان و بدون آماده‌سازی</b> چالش امروز را ۶۰ ثانیه انجام بده و ضبط کن (ضبط «قبل»). خراب شدنش طبیعی است؛ قرار است جاهای خالی‌ات را خودت ببینی. آخر جلسه همین را دوباره ضبط می‌کنی.</p><div class="drill"><b>چالش امروز:</b> ${esc(s.ch)}</div>`;
-  if(m>=1) h+=`<div class="drill"><b>تکرار یک کار قدیمی (۶۰ ثانیه):</b> چالش جلسهٔ ${fa(m)} («${esc(SESSIONS[m].t)}») را دوباره ضبط کن و با ضبط همان روز مقایسه کن: روان‌تر شد؟ مکث‌ها کمتر شد؟ تکرار همان کار یکی از مؤثرترین روش‌های روان شدن است.<div class="small muted" style="margin-top:4px">${esc(SESSIONS[m].ch)}</div></div>`;
-  if(n<=20) h+=`<div class="kit"><div class="sub">جعبه‌ابزار روانی — به جای سکوت این‌ها را بگو</div><div class="small muted">برای فکر کردن:</div><div class="pron">${KIT.think.map(t=>`<span>${esc(t)}</span>`).join("")}</div><div class="small muted">وقتی گوش می‌دهی (نشان بده دنبال می‌کنی):</div><div class="pron">${KIT.back.map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>`;
+  let h=`<p><b>قبل از هر یادگیری، همین الان و بدون آماده‌سازی</b> چالش امروز را ۶۰ ثانیه انجام بده و با دکمهٔ زیر ضبط کن (ضبط «قبل»). خراب شدنش طبیعی است؛ قرار است جاهای خالی‌ات را خودت ببینی. آخر جلسه همین را دوباره ضبط می‌کنی.</p><div class="drill"><b>چالش امروز:</b> ${esc(s.ch)}</div>${recBox("s"+n+":before","ضبط «قبل»",90)}`;
+  if(m>=1) h+=`<div class="drill"><b>تکرار یک کار قدیمی (۶۰ ثانیه):</b> چالش جلسهٔ ${fa(m)} («${esc(SESSIONS[m].t)}») را دوباره ضبط کن و با ضبط همان روز مقایسه کن: روان‌تر شد؟ مکث‌ها کمتر شد؟ تکرار همان کار یکی از مؤثرترین روش‌های روان شدن است.<div class="small muted" style="margin-top:4px">${esc(SESSIONS[m].ch)}</div>${recBox("s"+m+":after","ضبط جلسهٔ "+fa(m),0,'data-readonly="1"')}${recBox("s"+n+":repeat","ضبط تکرار",90,'data-compare="s'+m+':after" data-compare-label="جلسهٔ '+fa(m)+'"')}</div>`;
+  if(n<=20) h+=`<div class="kit"><div class="sub">جعبه‌ابزار روانی — به جای سکوت این‌ها را بگو</div><div class="small muted">برای فکر کردن:</div><div class="pron">${KIT.think.map(t=>`<span class="pitem">${esc(t)}${TTS.btn(t)}</span>`).join("")}</div><div class="small muted">وقتی گوش می‌دهی (نشان بده دنبال می‌کنی):</div><div class="pron">${KIT.back.map(t=>`<span class="pitem">${esc(t)}${TTS.btn(t)}</span>`).join("")}</div></div>`;
   return h;
 }
 const SHADOW_HOW = `<div class="how"><b>روش Shadowing (تاک تک‌نفره):</b><ol><li>فقط بازهٔ تعیین‌شده را یک بار بدون متن گوش کن و موضوع را در یک جمله بلند بگو. دیدن کامل ویدیو اختیاری است و خارج از وقت جلسه.</li><li>با متن (Transcript) گوش کن؛ عبارات ناآشنا را یادداشت کن.</li><li>۶۰ ثانیهٔ اول را جمله‌به‌جمله: Pause کن و ۲–۳ بار با همان لحن و ریتم تکرار کن.</li><li>Shadowing هم‌زمان: ۵ بار همراه گوینده (با فاصلهٔ نیم‌ثانیه) بگو؛ ریتم، تکیه و لحن مهم‌تر از تک‌تک کلمه‌هاست.</li><li>بار آخر را ضبط کن و با اصل مقایسه کن.</li></ol>اگر ted.com باز نشد، نام تاک را در YouTube جستجو کن.</div>`;
@@ -675,23 +920,23 @@ function renderSession(s){
   const s1=step(1,"شروع سرد: اول حرف بزن",rep?"۴ دقیقه":"۳ دقیقه",coldBlock(s),"challenge");
   const s2=step(2,"مرور فاصله‌دار","۷ دقیقه",srsBlock(n));
   const s3=step(3,"ورودی جدید: ۵ مورد اصلی + ۵ پشتیبان","۸ دقیقه",
-    `<div class="how"><b>روش:</b> هر مورد و مثالش را <b>بلند</b> بخوان، بعد یک جملهٔ جدید دربارهٔ زندگی یا کار خودت بساز و بلند بگو. ننویس. ۵ مورد اصلی باید امروز در گفتگو با ChatGPT به کار بروند (پرامپت مجبورت می‌کند). موارد اضافه اختیاری‌اند. هر موردی که جمله‌سازی با آن سخت بود را ★ بزن.</div>
+    rateBar()+`<div class="how"><b>روش:</b> هر مورد و مثالش را <b>بلند</b> بخوان، بعد یک جملهٔ جدید دربارهٔ زندگی یا کار خودت بساز و بلند بگو. ننویس. ۵ مورد اصلی باید امروز در گفتگو با ChatGPT به کار بروند (پرامپت مجبورت می‌کند). موارد اضافه اختیاری‌اند. هر موردی که جمله‌سازی با آن سخت بود را ★ بزن.</div>
     <div class="sub">۵ مورد اصلی امروز — حتماً در گفتگو استفاده کن</div>${itemList(sp.must)}
     <div class="sub">۵ مورد پشتیبان</div>${itemList(sp.support)}
     ${sp.extra.length?`<details class="howd"><summary>موارد اضافه (اختیاری · ${fa(sp.extra.length)} مورد)</summary>${itemList(sp.extra)}</details>`:""}`);
   const s4=step(4,`گرامر گفتاری: <span class="en">${esc(s.g.t)}</span>`,"۶ دقیقه",
-    `<p>${esc(s.g.fa)}</p><ul class="gram-ex">${s.g.ex.map(e=>`<li>${esc(e)}</li>`).join("")}</ul><div class="drill"><b>Drill شفاهی:</b> ${esc(s.g.drill)}</div>`);
+    `<p>${esc(s.g.fa)}</p><ul class="gram-ex">${s.g.ex.map(e=>`<li>${TTS.btn(e)}${esc(e)}</li>`).join("")}</ul><div class="drill"><b>Drill شفاهی:</b> ${esc(s.g.drill)}</div>`);
   const isTed = s.li.u.includes("ted.com/talks/");
   const s5=step(5,s.li.dialog?"شنیدن و Shadowing دیالوگ":"شنیدن و Shadowing","۸ دقیقه",
     `<p><b>امروز:</b> <a href="${esc(s.li.u)}" target="_blank" rel="noopener"><span class="en">${esc(s.li.t)}</span></a>${isTed?` · <a href="${esc(s.li.u)}/transcript" target="_blank" rel="noopener">متن کامل (Transcript)</a>`:""}</p><p><b>بازه:</b> ${esc(s.li.seg)}</p><p>${esc(s.li.task)}</p>${s.li.dialog?SHADOW_DIALOG_HOW:SHADOW_HOW}`);
   const s6=step(6,`تلفظ و گفتار پیوسته: <span class="en">${esc(s.pr.t)}</span>`,"۴ دقیقه",
-    `<p>${esc(s.pr.fa)}</p><div class="pron">${s.pr.items.map(pronHtml).join("")}</div><div class="how">موارد لینک‌دار را در YouGlish باز کن و از ۲–۳ گویندهٔ واقعی بشنو. هر مورد را ۵ بار بلند بگو، سپس یک جمله با آن بساز. حروف بزرگ = هجای تکیه‌دار؛ ↗ / ↘ = لحن بالارونده / پایین‌رونده. مدل تلفظ این برنامه انگلیسی آمریکایی است.</div>`);
+    rateBar()+`<p>${esc(s.pr.fa)}</p><div class="pron">${s.pr.items.map(pronHtml).join("")}</div><div class="how">🔊 را بزن تا تلفظ آمریکایی را بشنوی (بدون اینترنت هم کار می‌کند). برای شنیدن از زبان آدم‌های واقعی، موارد لینک‌دار را در YouGlish باز کن. هر مورد را ۵ بار بلند بگو، سپس یک جمله با آن بساز. حروف بزرگ = هجای تکیه‌دار؛ ↗ / ↘ = لحن بالارونده / پایین‌رونده. مدل تلفظ این برنامه انگلیسی آمریکایی است.</div>`);
   const s7=step(7,"تمرین روانی (Fluency Drill)","۵ دقیقه",`<p>${esc(s.fl)}</p><div class="how">قانون تمرین روانی: <b>نایست، برنگرد، ترجمه نکن.</b> اگر کلمه‌ای یادت نیامد، دورش بزن (It's a kind of…) یا از جعبه‌ابزار روانی استفاده کن (Well, let me think…) و ادامه بده. درستی در این بخش مهم نیست؛ سرعت و پیوستگی مهم است.</div>`);
   const s8=step(8,"صحبت با ChatGPT Voice","۱۵ دقیقه",
     `<div class="how"><ol><li>در ChatGPT یک چت <b>جدید</b> باز کن و این پرامپت را در باکس <b>متنی</b> Paste و ارسال کن.</li><li>بعد دکمهٔ Voice را بزن و گفتگو را شروع کن (پرامپت در همان چت می‌ماند).</li><li>حداقل ۱۵ دقیقه. هر وقت خواستی بگو <span class="en">"FEEDBACK"</span>.</li><li>بعد از گفتگو، متن چت را باز کن و ۳ اشتباه اصلی را در «دفتر من» وارد کن.</li></ol>پرامپت خودکار ساخته شده: ۵ مورد اصلی و ۵ پشتیبان امروز، مرور جلسه‌های قبل و گرامر ۷ جلسه پیش، پروفایل کاری و بانک جمله‌هایت، لیست سخت‌ها، اشتباه‌های دفتر خطا، تله‌های فارسی‌زبان‌ها و ضعف‌هایت.</div>
     <div class="prompt"><button class="btn pri copy" data-copy>کپی پرامپت</button><pre>${esc(buildPrompt(s))}</pre></div>`,"gpt");
   const s9=step(9,"چالش پایانی (ضبط «بعد»)","۵ دقیقه",
-    `<p>${esc(s.ch)}</p><div class="how">ضبط کن، بعد ضبط «بعد» را با ضبط «قبل» (بخش ۱) پشت سر هم گوش کن و ۲ تفاوت مشخص پیدا کن. اگر معیار را نگرفتی، فردا قبل از جلسهٔ بعد <b>فقط همین چالش</b> را دوباره انجام بده (حداکثر یک تکرار؛ بعد جلو برو).</div>
+    `<p>${esc(s.ch)}</p>${recBox("s"+n+":after","ضبط «بعد»",n===59?330:200,'data-compare="s'+n+':before" data-compare-label="قبل"')}${recBox("s"+n+":before","ضبط «قبل»",0,'data-readonly="1"')}<div class="how">با دکمهٔ ضبط، چالش را ضبط کن. برنامه مکث‌ها و طولانی‌ترین تکه را خودکار با ضبط «قبل» مقایسه می‌کند. هر دو را پشت سر هم گوش کن و ۲ تفاوت مشخص پیدا کن. اگر معیار را نگرفتی، فردا قبل از جلسهٔ بعد <b>فقط همین چالش</b> را دوباره انجام بده (حداکثر یک تکرار؛ بعد جلو برو).</div>
     <label class="check-line"><input type="checkbox" id="passed" ${ST.passed[n]?"checked":""}> معیار قبولی چالش را گرفتم</label>`,"challenge");
   const s10=step(10,"بستن جلسه: دفتر خطا، بانک جمله‌ها، کار واقعی","۲ دقیقه",
     `${isHumanWeek(n)?humanBlock(s):""}<p><b>دفتر خطا:</b> ۳ اشتباه امروز (از بازخورد ChatGPT یا ضبط چالش) را در <a href="#errors">دفتر من</a> وارد کن.</p><p><b>بانک جمله‌ها:</b> اگر امروز جمله‌ای ساختی که واقعاً سر کار می‌گویی، به بانک جمله‌ها اضافه کن.</p><p><b>کار واقعی امروز:</b> ${esc(s.work)}</p>
@@ -703,14 +948,14 @@ function renderSession(s){
 function benchmarkTests(n){
   const c=CHECK[n]||CHECK[0];
   return `<ol>
-  <li><b>Task A — تک‌گویی ثابت (۲ دقیقه):</b> <span class="en">"Describe your job, a project you're working on and a challenge you're facing."</span> ضبط کن. همان سؤال همهٔ ارزیابی‌ها برای مقایسه — بین ارزیابی‌ها جوابش را تمرین و حفظ نکن.</li>
-  <li><b>Task A2 — تک‌گویی تازه (۲ دقیقه):</b> <span class="en">"${esc(c.a2)}"</span> ضبط کن. این سؤال هر بار عوض می‌شود تا عددها با جواب حفظ‌شده بالا نروند.</li>
-  <li><b>Task B — سؤال غیرمنتظره (۹۰ ثانیه، ۱۰ ثانیه فکر):</b> <span class="en">"${esc(c.q)}"</span> ضبط کن.</li>
+  <li><b>Task A — تک‌گویی ثابت (۲ دقیقه):</b> <span class="en">"Describe your job, a project you're working on and a challenge you're facing."</span> ضبط کن. همان سؤال همهٔ ارزیابی‌ها برای مقایسه — بین ارزیابی‌ها جوابش را تمرین و حفظ نکن.${recBox("cp"+n+":A","ضبط Task A",125,'data-cp="'+n+'"')}</li>
+  <li><b>Task A2 — تک‌گویی تازه (۲ دقیقه):</b> <span class="en">"${esc(c.a2)}"</span> ضبط کن. این سؤال هر بار عوض می‌شود تا عددها با جواب حفظ‌شده بالا نروند.${recBox("cp"+n+":A2","ضبط Task A2",125)}</li>
+  <li><b>Task B — سؤال غیرمنتظره (۹۰ ثانیه، ۱۰ ثانیه فکر):</b> <span class="en">"${esc(c.q)}"</span> ضبط کن.${recBox("cp"+n+":B","ضبط Task B",95)}</li>
   <li><b>Task C — ChatGPT Voice:</b> پرامپت همین بخش را بده و آزمون شفاهی را انجام بده (نمرهٔ ۱–۹ Fluency را یادداشت کن).</li>
   <li><b>Task D — یادآوری فعال:</b> ۳۰ مورد از موارد مرور همین صفحه را تصادفی انتخاب کن؛ برای هر کدام در ۵ ثانیه یک جملهٔ درست بگو. درصد موفقیت = Recall٪.</li>
   <li><b>Task E — شنیدن:</b> یک قسمت تازه از 6 Minute English را (<a href="https://www.youtube.com/@bbclearningenglish/search?query=6%20minute%20english" target="_blank" rel="noopener">کانال YouTube</a> یا <a href="https://www.bbc.co.uk/learningenglish/english/features/6-minute-english" target="_blank" rel="noopener">سایت BBC</a>) <b>بدون زیرنویس</b> گوش کن و درصد فهمت را تخمین بزن (۰–۱۰۰)؛ بعد ۳۰ ثانیه از آن را دیکته بنویس و با متن مقایسه کن.</li></ol>`;
 }
-const MEASURE_HOW = `<div class="how"><b>چطور عددها را بگیری:</b><ul><li><b>کلمه در دقیقه (WPM):</b> ضبط Task A، A2 و B را متن کن (Transcript خودکار ضبط‌کنندهٔ گوشی، یا دکمهٔ میکروفون داخل باکس متنی ChatGPT — نه حالت Voice) و در پرامپت تحلیل Paste کن. میانگین WPM را ثبت کن.</li><li><b>مکث‌های طولانی:</b> ضبط Task A را گوش کن و مکث‌های بیش از ۳ ثانیه را بشمار.</li><li><b>طولانی‌ترین تکهٔ بدون مکث:</b> در ضبط Task A، طولانی‌ترین بازه‌ای که بدون مکث بیش از ۱ ثانیه حرف زدی را (به ثانیه) با تایمر ضبط پیدا کن.</li><li><b>Filler در دقیقه:</b> umm / err / «اِ» / like بی‌جا را <b>با گوش</b> در ضبط بشمار ÷ ۲. متن خودکار معمولاً این‌ها را حذف می‌کند، پس از روی متن نشمار.</li><li><b>خطا در دقیقه:</b> از تحلیل ChatGPT (بخش ۱، میانگین).</li><li><b>اعتمادبه‌نفس:</b> ۱ تا ۱۰، صادقانه: «اگر همین الان یک جلسهٔ کاری انگلیسی داشتم، چقدر راحت بودم؟»</li></ul></div>`;
+const MEASURE_HOW = `<div class="how"><b>چطور عددها را بگیری:</b><ul><li><b>خودکار:</b> اگر با دکمهٔ ضبط داخل برنامه ضبط کنی، تعداد مکث‌های بالای ۳ ثانیه و طولانی‌ترین تکهٔ بدون مکث خودکار حساب می‌شوند (تقریبی، از روی بلندی صدا) و با «ثبت در جدول پیشرفت» وارد جدول می‌شوند. در جای ساکت ضبط کن تا تشخیص دقیق‌تر باشد.</li><li><b>کلمه در دقیقه (WPM):</b> ضبط Task A، A2 و B را متن کن (Transcript خودکار ضبط‌کنندهٔ گوشی، یا دکمهٔ میکروفون داخل باکس متنی ChatGPT — نه حالت Voice) و در پرامپت تحلیل Paste کن. میانگین WPM را ثبت کن.</li><li><b>مکث‌های طولانی (اگر بیرون از برنامه ضبط کردی):</b> ضبط Task A را گوش کن و مکث‌های بیش از ۳ ثانیه را بشمار.</li><li><b>طولانی‌ترین تکهٔ بدون مکث (اگر بیرون از برنامه ضبط کردی):</b> در ضبط Task A، طولانی‌ترین بازه‌ای که بدون مکث بیش از ۱ ثانیه حرف زدی را (به ثانیه) با تایمر ضبط پیدا کن.</li><li><b>Filler در دقیقه:</b> umm / err / «اِ» / like بی‌جا را <b>با گوش</b> در ضبط بشمار ÷ ۲. متن خودکار معمولاً این‌ها را حذف می‌کند، پس از روی متن نشمار.</li><li><b>خطا در دقیقه:</b> از تحلیل ChatGPT (بخش ۱، میانگین).</li><li><b>اعتمادبه‌نفس:</b> ۱ تا ۱۰، صادقانه: «اگر همین الان یک جلسهٔ کاری انگلیسی داشتم، چقدر راحت بودم؟»</li></ul></div>`;
 function targetsTable(n){
   const c=CHECK[n];
   return `<div class="tbl"><table><thead><tr><th>معیار</th><th>هدف این مرحله (نسبت به جلسهٔ صفر)</th></tr></thead><tbody>
@@ -743,7 +988,7 @@ function renderReview(s){
     `<p><b>بررسی تله‌های فارسی‌زبان‌ها:</b> ضبط Task A و A2 را گوش کن و هر تله‌ای که هنوز در آن افتادی را در دفتر خطا ثبت کن.</p>${trapsTable()}
     <p>عددها را در <a href="#progress">صفحهٔ پیشرفت</a> (ردیف جلسهٔ ${fa(n)}) وارد کن. هدف‌های این مرحله:</p>${targetsTable(n)}
     <div class="note"><b>قانون تصمیم:</b> اگر به <b>۴ هدف یا بیشتر</b> رسیدی → با خیال راحت جلو برو. اگر به ۲–۳ هدف رسیدی → جلو برو اما در ۵ جلسهٔ بعد «تمرین اضافه» ضعیف‌ترین حوزه را از صفحهٔ «ارزیابی اولیه» فعال کن. اگر کمتر از ۲ هدف → قبل از ادامه، ۲ جلسه از این فاز را که چالششان را قبول نشدی (یا سخت‌ترین‌ها) یک بار دیگر کامل انجام بده. <b>هرگز بیش از ۲ جلسه عقب برنگرد</b>؛ پیشرفت Speaking غیرخطی است.</div>`);
-  const reflect = s.final ? `<ol><li>ضبط Task A امروز را با ضبط جلسهٔ صفر پشت سر هم گوش کن. ۳ تفاوت مشخص را بنویس.</li><li>ضبط ۵ دقیقه‌ای جلسهٔ ۵۹ را گوش کن: کجا هنوز ترجمه می‌کنی؟</li><li>پرامپت ارزیابی صوتی (صفحهٔ ارزیابی اولیه) را دوباره اجرا کن و نمرهٔ هر ۴ معیار را با روز اول مقایسه کن.</li><li>خودارزیابی «می‌توانم…» را در صفحهٔ ارزیابی اولیه دوباره پر کن (ستون جلسهٔ ۶۰).</li></ol>
+  const reflect = s.final ? `<ol><li>ضبط Task A امروز را با ضبط جلسهٔ صفر پشت سر هم گوش کن. ۳ تفاوت مشخص را بنویس.${recBox("cp0:A","Task A — جلسهٔ صفر",0,'data-readonly="1"')}${recBox("cp60:A","Task A — امروز",0,'data-readonly="1"')}</li><li>ضبط ۵ دقیقه‌ای جلسهٔ ۵۹ را گوش کن: کجا هنوز ترجمه می‌کنی؟${recBox("s59:after","ضبط جلسهٔ ۵۹",0,'data-readonly="1"')}</li><li>پرامپت ارزیابی صوتی (صفحهٔ ارزیابی اولیه) را دوباره اجرا کن و نمرهٔ هر ۴ معیار را با روز اول مقایسه کن.</li><li>خودارزیابی «می‌توانم…» را در صفحهٔ ارزیابی اولیه دوباره پر کن (ستون جلسهٔ ۶۰).</li></ol>
     <h3 style="margin-top:8px">برنامهٔ بعد از ۶۰ جلسه (نگه‌داشتن و ادامهٔ پیشرفت)</h3><ul><li><b>روزانه (۲۰ دقیقه):</b> ۱۰ دقیقه ChatGPT Voice با یک موقعیت واقعی کاری آن روز + ۵ دقیقه Shadowing یک دیالوگ یا تاک تازه + ۵ دقیقه مرور لیست سخت‌ها، دفتر خطا و بانک جمله‌ها.</li><li><b>هفتگی:</b> یک گفتگوی انسانی ۲۰ دقیقه‌ای + یک جلسهٔ ۲۰ دقیقه‌ای مرور یکی از فازها (به ترتیب ۱ تا ۶) با پرامپت جلسهٔ مرور همان فاز.</li><li><b>ماهانه:</b> Task A، A2 و B را ضبط کن و عددها را ثبت کن؛ اگر WPM یا خطاها ۲ ماه ثابت ماند، دور دوم این برنامه را از فاز ضعیف‌تر شروع کن.</li><li><b>قدم بعدی:</b> اگر CEFR تخمینی به B2+ رسیده، هدف بعدی را «C1 کاری» بگذار: ارائه‌های ۱۰ دقیقه‌ای، مذاکرهٔ واقعی و گفتگوی منظم با انسان‌ها.</li></ul>`
     : `<ol><li>در این ۹ جلسه، کدام موقعیت را الان واقعاً راحت‌تر انجام می‌دهی؟ یک مثال مشخص بزن.</li><li>کدام ۳ مورد از لیست سخت‌ها هنوز سخت است؟ برای هر کدام همین الان ۳ جمله بگو.</li><li>پرتکرارترین اشتباه دفتر خطا چیست؟ یک قانون ۱ جمله‌ای برای خودت بنویس.</li><li>۵ جملهٔ کاری تازه که در این فاز یاد گرفتی و واقعاً سر کار می‌گویی را به «بانک جمله‌ها» اضافه کن.</li><li>در ۱۰ جلسهٔ بعد، کدام ضعف را باید «تمرین اضافه» بگیری؟ در صفحهٔ ارزیابی اولیه به‌روزش کن.</li></ol>`;
   const s5=step(5, s.final?"مقایسهٔ قبل و بعد + برنامهٔ ادامه":"بازتاب (بلند و به انگلیسی)", s.final?"۱۵ دقیقه":"۵ دقیقه", reflect+`<label class="check-line"><input type="checkbox" id="done" ${ST.done[n]?"checked":""}> این جلسه را کامل انجام دادم</label>`);
@@ -809,7 +1054,11 @@ function renderGuide(){
   <li><a href="https://www.youtube.com/@RachelsEnglish" target="_blank" rel="noopener">Rachel's English</a> — تلفظ آمریکایی؛ اگر در ارزیابی، تلفظ ضعف اصلی‌ات بود، هفته‌ای ۲ ویدیو اضافه کن.</li></ul>
   <p class="small muted">از داخل ایران، YouTube و گاهی TED و BBC فقط با VPN باز می‌شوند.</p></section>
 
-  <section class="card small"><b>دربارهٔ ذخیرهٔ پیشرفت:</b> تیک‌ها، ستاره‌ها، دفتر من و عددهای پیشرفت فقط در همین مرورگر ذخیره می‌شوند. از بخش «پیشرفت» هر چند وقت یک بار «پشتیبان» بگیر؛ اگر مرورگر یا دستگاه را عوض کردی، با همان متن برمی‌گردانی‌شان.</section>
+  <section><h2>ابزارهای داخل برنامه</h2><ul>
+  <li><b>ضبط صدا:</b> چالش‌ها و آزمون‌ها را با دکمهٔ قرمز داخل خود برنامه ضبط کن. ضبط‌ها روی گوشی می‌مانند و برنامه تعداد مکث‌های بالای ۳ ثانیه و طولانی‌ترین تکهٔ بدون مکث را خودکار حساب می‌کند و «قبل» و «بعد» را مقایسه می‌کند.</li>
+  <li><b>🔊 تلفظ:</b> کنار هر لغت، عبارت، مثال و مورد تلفظ دکمهٔ 🔊 هست که با صدای خود گوشی و لهجهٔ آمریکایی می‌خواند؛ بدون اینترنت هم کار می‌کند. سرعت «آهسته» هم دارد.</li>
+  <li><b>بدون اینترنت:</b> بعد از اولین باز شدن، خود برنامه بدون اینترنت و VPN باز می‌شود. فقط ویدیوها، YouGlish و ChatGPT اینترنت لازم دارند.</li></ul></section>
+  <section class="card"><h2>نصب و ذخیره‌سازی</h2>${installHelp()}<p class="small">داده‌هایت در دو جای مرورگر ذخیره می‌شوند (localStorage و IndexedDB). ضبط‌های صوتی فقط روی همین گوشی‌اند و داخل فایل پشتیبان نیستند. هفته‌ای یک بار از صفحهٔ «پیشرفت» فایل پشتیبان بگیر؛ برنامه یادت می‌اندازد.</p></section>
   </div>`;
 }
 
@@ -914,22 +1163,34 @@ function renderProgress(){
   ${delta}
   <h2>جلسه‌های انجام‌شده</h2>
   <p class="kpi">${fa(Object.keys(ST.done).filter(k=>ST.done[k]).length)} از ۶۰ جلسه · چالش‌های قبول‌شده: ${fa(Object.keys(ST.passed).filter(k=>ST.passed[k]).length)} · موارد لیست سخت‌ها: ${fa(hardList().length)} · اشتباه‌های حل‌نشده: ${fa((ST.err||[]).filter(e=>!e.done).length)} · جمله‌های بانک: ${fa((ST.phrases||[]).length)}</p>
-  <h2>پشتیبان‌گیری</h2>
-  <p class="small muted">همهٔ داده‌ها (تیک‌ها، ستاره‌ها، دفتر من، عددها) فقط در همین مرورگر هستند. متن زیر را کپی کن و جایی نگه دار (مثلاً در یک یادداشت). برای برگرداندن، متن را در باکس دوم Paste کن.</p>
-  <div class="prompt"><button class="btn pri copy" data-copy>کپی پشتیبان</button><pre id="backup">${esc(JSON.stringify(ST))}</pre></div>
-  <label for="restore" class="small">برگرداندن از پشتیبان:</label><textarea id="restore" class="en" placeholder='{"done":{...}}'></textarea>
-  <div class="row"><button class="btn" id="restore-btn">برگرداندن</button><span id="restore-msg" class="small"></span></div>
+  <h2>ذخیره‌سازی و پشتیبان</h2>
+  <p class="small" id="storage-info">در حال بررسی…</p>
+  <p class="small muted">تیک‌ها، ستاره‌ها، دفتر من و عددها روی همین گوشی در دو جا ذخیره می‌شوند (localStorage و IndexedDB). ضبط‌های صوتی هم روی همین گوشی‌اند ولی داخل فایل پشتیبان نیستند. آخرین پشتیبان: <b>${ST.lastBackup?new Date(ST.lastBackup).toLocaleDateString("fa-IR"):"هنوز نگرفته‌ای"}</b>.</p>
+  <div class="row"><button class="btn pri" type="button" id="backup-file">ذخیرهٔ فایل پشتیبان</button><label class="btn" for="restore-file">برگرداندن از فایل</label><input type="file" id="restore-file" accept="application/json,.json" hidden></div>
+  <details class="howd"><summary>پشتیبان متنی (کپی و Paste)</summary>
+  <div class="prompt"><button class="btn pri copy" data-copy data-backup>کپی پشتیبان</button><pre id="backup">${esc(JSON.stringify(ST))}</pre></div>
+  <label for="restore" class="small">برگرداندن از متن:</label><textarea id="restore" class="en" placeholder='{"done":{...}}'></textarea>
+  <div class="row"><button class="btn" id="restore-btn">برگرداندن</button></div></details>
+  <p><span id="restore-msg" class="small"></span></p>
+  <h2>ضبط‌ها</h2><p class="small muted">ضبط‌های ارزیابی (جلسهٔ صفر و جلسه‌های مرور) برای مقایسهٔ نهایی نگه داشته می‌شوند. اگر فضای گوشی کم شد، ضبط‌های جلسه‌های عادی را پاک کن.</p>
+  <button class="btn" type="button" id="clear-recs">حذف ضبط‌های جلسه‌های عادی</button>
   </div>`;
 }
 
 /* ======================= Events ======================= */
 function bind(view,n){
-  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{ copyText(b.parentElement.querySelector("pre").textContent,b); }));
+  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{ copyText(b.parentElement.querySelector("pre").textContent,b); if("backup" in b.dataset){ ST.lastBackup=Date.now(); save(); } }));
+  document.querySelectorAll("[data-snooze]").forEach(b=>b.addEventListener("click",()=>{ ST[b.dataset.snooze+"Snooze"]=Date.now(); save(); route(true); }));
+  document.querySelectorAll("[data-install]").forEach(b=>b.addEventListener("click",async ()=>{ if(!INSTALL_PROMPT) return; INSTALL_PROMPT.prompt(); try{ await INSTALL_PROMPT.userChoice; }catch(e){} INSTALL_PROMPT=null; route(true); }));
+  const bf=$("#backup-file"); if(bf) bf.addEventListener("click",()=>saveBackupFile(bf));
+  const rf=$("#restore-file"); if(rf) rf.addEventListener("change",async ()=>{ const f=rf.files&&rf.files[0]; if(!f) return; try{ const o=JSON.parse(await f.text()); if(typeof o!=="object"||!o||!("done" in o)) throw 0; ST=Object.assign(defaultState(),o); save(); route(true); $("#restore-msg").textContent="برگردانده شد ✓"; }catch(e){ $("#restore-msg").textContent="فایل پشتیبان معتبر نیست."; } });
+  const cr=$("#clear-recs"); if(cr) cr.addEventListener("click",()=>clearSessionRecordings(cr));
+  if(view==="progress") storageInfo();
   const setHard=(k,v)=>{ if(v) ST.hard[k]=true; else delete ST.hard[k]; save(); document.querySelectorAll(`[data-star="${k}"]`).forEach(x=>x.classList.toggle("on",!!v)); };
   document.querySelectorAll("[data-star]").forEach(b=>b.addEventListener("click",()=>{ const k=b.dataset.star; const src=b.closest(".srs-src");
     if(b.classList.contains("chip") && src){ const r=src.querySelector(".reveal"), it=itemBy(k); if(!r||!it) return;
       src.querySelectorAll(".chip").forEach(c=>c.classList.remove("sel")); b.classList.add("sel");
-      r.hidden=false; r.innerHTML=`<div class="en"><b>${esc(it[0])}</b></div><div>${esc(it[1])}</div><div class="en ex">${esc(it[2])}</div><div class="row"><button class="btn" data-know="${k}">بلد بودم ✓</button><button class="btn" data-hardset="${k}">سخت بود ★</button></div>`;
+      r.hidden=false; r.innerHTML=`<div class="en"><b>${esc(it[0])}</b> ${TTS.btn(it[0])}</div><div>${esc(it[1])}</div><div class="en ex">${TTS.btn(it[2])} ${esc(it[2])}</div><div class="row"><button class="btn" data-know="${k}">بلد بودم ✓</button><button class="btn" data-hardset="${k}">سخت بود ★</button></div>`;
       r.querySelector("[data-know]").onclick=()=>{ setHard(k,false); b.classList.add("known"); r.hidden=true; };
       r.querySelector("[data-hardset]").onclick=()=>{ setHard(k,true); r.hidden=true; };
       return; }
@@ -949,10 +1210,15 @@ function bind(view,n){
   document.querySelectorAll("[data-errdone]").forEach(c=>c.addEventListener("change",()=>{ ST.err[+c.dataset.errdone].done=c.checked; save(); route(true); }));
   document.querySelectorAll("[data-errdel]").forEach(b=>b.addEventListener("click",()=>{ ST.err.splice(+b.dataset.errdel,1); save(); route(true); }));
   document.querySelectorAll("[data-met]").forEach(inp=>inp.addEventListener("change",()=>{ const [cp,k]=inp.dataset.met.split("|"); ST.metrics[cp]=ST.metrics[cp]||{}; if(inp.value==="") delete ST.metrics[cp][k]; else ST.metrics[cp][k]=+inp.value; save(); route(true); }));
-  const rb=$("#restore-btn"); if(rb) rb.addEventListener("click",()=>{ try{ const o=JSON.parse($("#restore").value); if(typeof o!=="object"||!o) throw 0; ST=Object.assign({done:{},passed:{},hard:{},focus:[],err:[],metrics:{},cando:{},profile:{},phrases:[]},o); save(); route(true); }catch(e){ $("#restore-msg").textContent="متن پشتیبان معتبر نیست؛ کل متن را دقیق کپی کن."; } });
+  const rb=$("#restore-btn"); if(rb) rb.addEventListener("click",()=>{ try{ const o=JSON.parse($("#restore").value); if(typeof o!=="object"||!o) throw 0; ST=Object.assign(defaultState(),o); save(); route(true); }catch(e){ $("#restore-msg").textContent="متن پشتیبان معتبر نیست؛ کل متن را دقیق کپی کن."; } });
 }
 window.addEventListener("hashchange",()=>route());
+TTS.init();
 route();
-</script>
+reconcileState();
+requestPersist();
+if("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
 
-</body></html>
+</script>
+</body>
+</html>
