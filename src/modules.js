@@ -270,9 +270,11 @@ function makeShadow(root, A, o){
     const [s,e]=segs[i]; let started=false;
     set("listen","گوش کن…"); bar(0);
     A.pause(); A.rate(c.rate); A.seek(s);
-    A.playingCb=()=>{ if(started||state!=="listen") return; started=true; const dur=(e-s)/c.rate; bar(dur*1000,"listen"); timers.push(setTimeout(stop, Math.max(0, dur*1000-40))); };
+    A.playingCb=()=>{ if(started||!(state==="listen"||state==="tap")) return; started=true; if(state==="tap") set("listen","گوش کن…");
+      const dur=(e-s)/c.rate; bar(dur*1000,"listen"); timers.push(setTimeout(stop, Math.max(0, dur*1000-40))); };
     A.play();
-    timers.push(setTimeout(()=>{ if(!started && state==="listen") set("tap","برای پخش این جمله «ادامه» را بزن"); }, 2500));
+    // An ad or a blocked autoplay: keep waiting for the video to really start, but offer a manual tap.
+    timers.push(setTimeout(()=>{ if(!started && state==="listen") set("tap", o.live?"برای پخش «ادامه» را بزن":"منتظر پخش… اگر تبلیغ YouTube پخش می‌شود صبر کن؛ اگر چیزی پخش نمی‌شود «ادامه» را بزن"); }, 2500));
     function stop(){ const t=A.now(); if(t!=null && t < e-0.5){ timers.push(setTimeout(stop, 200)); return; } A.pause(); turn(e-s); }
   }
   function live(){   // file without subtitles: play until the next pause in the speech
