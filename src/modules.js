@@ -282,7 +282,9 @@ function makeShadow(root, A, o){
     const start=A.now(); let sp=0, sil=0, began=false, t0=0;
     set("listen","گوش کن…"); bar(0); A.rate(c.rate);
     A.playingCb=()=>{ if(began) return; began=true; t0=performance.now();
-      tick=setInterval(()=>{ const v=o.level(); const el=(performance.now()-t0)/1000*c.rate;
+      tick=setInterval(()=>{
+        if(o.ended && o.ended()){ clearInterval(tick); tick=null; if(A.now()-start>0.8) segs[i]=[start,A.now()]; set("done","فایل تمام شد ✓ — آفرین!"); bar(0); unlockScreen(); return; }
+        const v=o.level(); const el=(performance.now()-t0)/1000*c.rate;
         if(v>o.thr()) { sp+=0.04; sil=0; } else sil+=0.04;
         if((sp>0.6 && el>1.2 && sil>=0.35) || el>=10){ clearInterval(tick); tick=null; A.pause(); const end=Math.max(start+0.5, A.now()-Math.min(sil,0.3)); segs[i]=[start,end]; count(); turn(end-start); }
       }, 40); };
@@ -364,7 +366,7 @@ function shfBuild(){
   const A=mediaAdapter(SHF.media);
   const pos=((ST.shadowFiles||{})[SHF.name])||0;
   let start=0; if(SHF.segs){ const k=SHF.segs.findIndex(x=>x[1]>pos); start=k<0?0:k; } else if(pos) SHF.media.currentTime=pos;
-  SH.cur=makeShadow(host.querySelector(".sh-mount"), A, { segs:SHF.segs||[], texts:SHF.texts, start, live:!SHF.segs, level:shfLevel, thr:shfThr,
+  SH.cur=makeShadow(host.querySelector(".sh-mount"), A, { segs:SHF.segs||[], texts:SHF.texts, start, live:!SHF.segs, level:shfLevel, thr:shfThr, ended:()=>SHF.media.ended,
     onUserStart:()=>{ if(!SHF.segs){ shfEnsureAudio(); try{ if(SHF.ctx && SHF.ctx.state!=="running") SHF.ctx.resume(); }catch(e){} } },
     onIndex:k=>{ ST.shadowFiles=ST.shadowFiles||{}; const seg=(SHF.segs||[])[k]; ST.shadowFiles[SHF.name]=seg?seg[0]:SHF.media.currentTime; save(); } });
   const info=document.getElementById("shf-info");
