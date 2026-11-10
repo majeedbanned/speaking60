@@ -366,14 +366,15 @@ let LASTN=1, CURN=null;
 function stepsDone(){ return (ST.steps&&ST.steps[CURN])||[]; }
 function route(keep){
   if(REC.active) REC.stop();
+  if(SH.cur){ SH.cur.destroy(); SH.cur=null; }
   if(TTS.ok) try{ speechSynthesis.cancel(); }catch(e){}
   const h=(location.hash||"").replace("#","");
   let view="today", n=null;
   if(/^s\d+$/.test(h)){ view="s"; n=Math.min(60,Math.max(1,parseInt(h.slice(1)))); }
-  else if(["guide","assess","errors","progress","list","more"].includes(h)) view=h;
+  else if(["guide","assess","errors","progress","list","more","shadow"].includes(h)) view=h;
   if(view==="today") n=nextSession();
   CURN = n!=null ? n : (view==="assess" ? "a" : null);
-  const on = view==="s" ? (n===nextSession()?"today":"list") : (["guide","assess","progress"].includes(view)?"more":view);
+  const on = view==="s" ? (n===nextSession()?"today":"list") : (["guide","assess","progress","shadow"].includes(view)?"more":view);
   $("#tabs").innerHTML = TABS.map(([k,l])=>`<a href="#${k}" class="${on===k?"on":""}">${l}</a>`).join("");
   const app=$("#app");
   if(view==="guide") app.innerHTML=renderGuide();
@@ -382,6 +383,7 @@ function route(keep){
   else if(view==="progress") app.innerHTML=renderProgress();
   else if(view==="list") app.innerHTML=renderList();
   else if(view==="more") app.innerHTML=renderMore();
+  else if(view==="shadow") app.innerHTML=renderShadowFile();
   else app.innerHTML=renderSessionShell(n);
   if(n!=null) LASTN=n;
   bind(view,n);
@@ -410,6 +412,7 @@ function renderMore(){
   return `<div class="morelist" style="margin-top:16px"><div class="card"><b>نصب روی گوشی</b>${installHelp()}</div>
   ${card("#assess","ارزیابی اولیه","یک بار قبل از جلسهٔ ۱ — تعیین سطح و ضعف‌ها")}
   ${card("#errors","دفتر من","پروفایل کاری، بانک جمله‌ها، دفتر خطا و لیست سخت‌ها")}
+  ${card("#shadow","Shadowing با فایل خودت","فیلم، سریال یا پادکست خودت را جمله‌به‌جمله تمرین کن (با زیرنویس یا بدون آن)")}
   ${card("#progress","پیشرفت با عدد","ثبت عددهای ارزیابی‌ها و پشتیبان‌گیری")}
   ${card("#guide","راهنمای برنامه","ساختار، قوانین، تله‌های فارسی‌زبان‌ها و منابع")}</div>`;
 }
@@ -470,8 +473,8 @@ function coldBlock(s){
   if(n<=20) h+=`<div class="kit"><div class="sub">جعبه‌ابزار روانی — به جای سکوت این‌ها را بگو</div><div class="small muted">برای فکر کردن:</div><div class="pron">${KIT.think.map(t=>`<span class="pitem">${esc(t)}${TTS.btn(t)}</span>`).join("")}</div><div class="small muted">وقتی گوش می‌دهی (نشان بده دنبال می‌کنی):</div><div class="pron">${KIT.back.map(t=>`<span class="pitem">${esc(t)}${TTS.btn(t)}</span>`).join("")}</div></div>`;
   return h;
 }
-const SHADOW_HOW = `<div class="how"><b>روش Shadowing (تاک تک‌نفره):</b><ol><li>فقط بازهٔ تعیین‌شده را یک بار بدون متن گوش کن و موضوع را در یک جمله بلند بگو. دیدن کامل ویدیو اختیاری است و خارج از وقت جلسه.</li><li>با متن (Transcript) گوش کن؛ عبارات ناآشنا را یادداشت کن.</li><li>۶۰ ثانیهٔ اول را جمله‌به‌جمله: Pause کن و ۲–۳ بار با همان لحن و ریتم تکرار کن.</li><li>Shadowing هم‌زمان: ۵ بار همراه گوینده (با فاصلهٔ نیم‌ثانیه) بگو؛ ریتم، تکیه و لحن مهم‌تر از تک‌تک کلمه‌هاست.</li><li>بار آخر را ضبط کن و با اصل مقایسه کن.</li></ol>اگر ted.com باز نشد، نام تاک را در YouTube جستجو کن.</div>`;
-const SHADOW_DIALOG_HOW = `<div class="how"><b>روش Shadowing دیالوگ (نقش‌گیری):</b><ol><li>یک بار بدون زیرنویس گوش کن و بگو چه اتفاقی افتاد.</li><li>با زیرنویس انگلیسی (CC) دوباره ببین؛ عبارات کاری را یادداشت کن. متن کامل: زیر ویدیو «…more» ← «Show transcript».</li><li>یک شخصیت را انتخاب کن. هر بار قبل از جملهٔ او Pause کن و جمله‌اش را خودت با همان لحن بگو (۳ بار).</li><li>دوباره پخش کن و هم‌زمان با همان شخصیت حرف بزن (۳ بار).</li><li>بار آخر با صدای ویدیو کم، نقش او را جواب بده و ضبط کن. این تمرین مستقیماً برای مکالمهٔ واقعی است، نه سخنرانی.</li></ol></div>`;
+const SHADOW_HOW = `<div class="how"><b>روش Shadowing (تاک تک‌نفره):</b> دکمهٔ «Shadowing جمله‌به‌جمله» مراحل ۳ و ۴ را خودکار انجام می‌دهد.<ol><li>فقط بازهٔ تعیین‌شده را یک بار بدون متن گوش کن و موضوع را در یک جمله بلند بگو. دیدن کامل ویدیو اختیاری است و خارج از وقت جلسه.</li><li>با متن (Transcript) گوش کن؛ عبارات ناآشنا را یادداشت کن.</li><li>۶۰ ثانیهٔ اول را جمله‌به‌جمله: Pause کن و ۲–۳ بار با همان لحن و ریتم تکرار کن.</li><li>Shadowing هم‌زمان: ۵ بار همراه گوینده (با فاصلهٔ نیم‌ثانیه) بگو؛ ریتم، تکیه و لحن مهم‌تر از تک‌تک کلمه‌هاست.</li><li>بار آخر را ضبط کن و با اصل مقایسه کن.</li></ol>اگر ted.com باز نشد، نام تاک را در YouTube جستجو کن.</div>`;
+const SHADOW_DIALOG_HOW = `<div class="how"><b>روش Shadowing دیالوگ (نقش‌گیری):</b> دکمهٔ «Shadowing جمله‌به‌جمله» مراحل ۳ و ۴ را خودکار انجام می‌دهد.<ol><li>یک بار بدون زیرنویس گوش کن و بگو چه اتفاقی افتاد.</li><li>با زیرنویس انگلیسی (CC) دوباره ببین؛ عبارات کاری را یادداشت کن. متن کامل: زیر ویدیو «…more» ← «Show transcript».</li><li>یک شخصیت را انتخاب کن. هر بار قبل از جملهٔ او Pause کن و جمله‌اش را خودت با همان لحن بگو (۳ بار).</li><li>دوباره پخش کن و هم‌زمان با همان شخصیت حرف بزن (۳ بار).</li><li>بار آخر با صدای ویدیو کم، نقش او را جواب بده و ضبط کن. این تمرین مستقیماً برای مکالمهٔ واقعی است، نه سخنرانی.</li></ol></div>`;
 const isHumanWeek = n => n>=21 && (n-21)%5===0;
 function humanBlock(s){
   return `<div class="humanbox"><h4>گفتگوی انسانی این هفته (۱۵–۲۰ دقیقه)</h4><div class="small">این هفته یک بار با یک آدم واقعی انگلیسی حرف بزن: یک همکار، دوستی که انگلیسی یاد می‌گیرد، یا یک هم‌زبان‌آموز (اپ‌هایی مثل Tandem یا HelloTalk). از Role-play همین جلسه استفاده کنید. آدم‌ها برخلاف ChatGPT وسط حرف می‌پرند، نامفهوم حرف می‌زنند و استرس واقعی می‌سازند — دقیقاً همان جایی که معمولاً یخ می‌زنی. بعدش ۲ جایی که گیر کردی را در دفتر خطا بنویس.</div><div class="en small" style="margin-top:6px"><b>Role-play:</b> ${esc(s.rp.scene)}</div></div>`;
@@ -493,7 +496,7 @@ function renderSession(s){
     `<p>${esc(s.g.fa)}</p><ul class="gram-ex">${s.g.ex.map(e=>`<li>${TTS.btn(e)}${esc(e)}</li>`).join("")}</ul><div class="drill"><b>Drill شفاهی:</b> ${esc(s.g.drill)}</div>`);
   const isTed = s.li.u.includes("ted.com/talks/");
   const s5=step(5,s.li.dialog?"شنیدن و Shadowing دیالوگ":"شنیدن و Shadowing","۸ دقیقه",
-    `<p><b>امروز:</b> <a href="${esc(s.li.u)}" target="_blank" rel="noopener"><span class="en">${esc(s.li.t)}</span></a>${isTed?` · <a href="${esc(s.li.u)}/transcript" target="_blank" rel="noopener">متن کامل (Transcript)</a>`:""}</p><p><b>بازه:</b> ${esc(s.li.seg)}</p><p>${esc(s.li.task)}</p>${s.li.dialog?SHADOW_DIALOG_HOW:SHADOW_HOW}`);
+    `<p><b>امروز:</b> <a href="${esc(s.li.u)}" target="_blank" rel="noopener"><span class="en">${esc(s.li.t)}</span></a>${isTed?` · <a href="${esc(s.li.u)}/transcript" target="_blank" rel="noopener">متن کامل (Transcript)</a>`:""}</p><p><b>بازه:</b> ${esc(s.li.seg)}</p><p>${esc(s.li.task)}</p>${s.li.sh&&s.li.sh.segs.length?`<div class="shadow" data-shadow="${n}"><button class="btn pri" type="button" data-shstart>▶ Shadowing جمله‌به‌جمله (${fa(s.li.sh.segs.length)} جمله)</button><span class="small muted">ویدیو داخل برنامه پخش می‌شود، بعد از هر جمله می‌ایستد تا تکرارش کنی و خودش می‌رود جملهٔ بعد.</span></div>`:""}<p class="small"><a href="#shadow">یا Shadowing با فیلم، سریال یا پادکست خودت ←</a></p>${s.li.dialog?SHADOW_DIALOG_HOW:SHADOW_HOW}`);
   const s6=step(6,`تلفظ و گفتار پیوسته: <span class="en">${esc(s.pr.t)}</span>`,"۴ دقیقه",
     rateBar()+`<p>${esc(s.pr.fa)}</p><div class="pron">${s.pr.items.map(pronHtml).join("")}</div><div class="how">🔊 را بزن تا تلفظ آمریکایی را بشنوی (بدون اینترنت هم کار می‌کند). برای شنیدن از زبان آدم‌های واقعی، موارد لینک‌دار را در YouGlish باز کن. هر مورد را ۵ بار بلند بگو، سپس یک جمله با آن بساز. حروف بزرگ = هجای تکیه‌دار؛ ↗ / ↘ = لحن بالارونده / پایین‌رونده. مدل تلفظ این برنامه انگلیسی آمریکایی است.</div>`);
   const s7=step(7,"تمرین روانی (Fluency Drill)","۵ دقیقه",`<p>${esc(s.fl)}</p><div class="how">قانون تمرین روانی: <b>نایست، برنگرد، ترجمه نکن.</b> اگر کلمه‌ای یادت نیامد، دورش بزن (It's a kind of…) یا از جعبه‌ابزار روانی استفاده کن (Well, let me think…) و ادامه بده. درستی در این بخش مهم نیست؛ سرعت و پیوستگی مهم است.</div>`);
@@ -623,6 +626,7 @@ function renderGuide(){
   <section><h2>ابزارهای داخل برنامه</h2><ul>
   <li><b>ضبط صدا:</b> چالش‌ها و آزمون‌ها را با دکمهٔ قرمز داخل خود برنامه ضبط کن. ضبط‌ها روی گوشی می‌مانند و برنامه تعداد مکث‌های بالای ۳ ثانیه و طولانی‌ترین تکهٔ بدون مکث را خودکار حساب می‌کند و «قبل» و «بعد» را مقایسه می‌کند.</li>
   <li><b>🔊 تلفظ:</b> کنار هر لغت، عبارت، مثال و مورد تلفظ دکمهٔ 🔊 هست که با صدای خود گوشی و لهجهٔ آمریکایی می‌خواند؛ بدون اینترنت هم کار می‌کند. سرعت «آهسته» هم دارد.</li>
+  <li><b>Shadowing جمله‌به‌جمله:</b> در بخش ۵ هر جلسه، ویدیو داخل برنامه پخش می‌شود و بعد از هر جمله می‌ایستد؛ نوار قرمز «نوبت تو» زمان تکرار است و بعد جملهٔ بعدی خودکار پخش می‌شود. حالت دستی، تکرار هر جمله تا ۳ بار، سرعت آهسته و زیرنویس هم دارد. در صفحهٔ «Shadowing با فایل خودت» همین کار را با فیلم یا پادکست خودت (با فایل زیرنویس یا بدون آن) انجام می‌دهی.</li>
   <li><b>بدون اینترنت:</b> بعد از اولین باز شدن، خود برنامه بدون اینترنت و VPN باز می‌شود. فقط ویدیوها، YouGlish و ChatGPT اینترنت لازم دارند.</li></ul></section>
   <section class="card"><h2>نصب و ذخیره‌سازی</h2>${installHelp()}<p class="small">داده‌هایت در دو جای مرورگر ذخیره می‌شوند (localStorage و IndexedDB). ضبط‌های صوتی فقط روی همین گوشی‌اند و داخل فایل پشتیبان نیستند. هفته‌ای یک بار از صفحهٔ «پیشرفت» فایل پشتیبان بگیر؛ برنامه یادت می‌اندازد.</p></section>
   </div>`;
@@ -770,7 +774,11 @@ function bind(view,n){
   document.querySelectorAll("[data-stepdone]").forEach(b=>b.addEventListener("click",()=>{ const num=+b.dataset.stepdone; ST.steps=ST.steps||{}; const arr=ST.steps[CURN]=ST.steps[CURN]||[]; if(!arr.includes(num)) arr.push(num);
     const total=document.querySelectorAll("details.step").length; if(typeof CURN==="number" && arr.length>=total) ST.done[CURN]=true; save(); route(true);
     if(typeof CURN==="number" && ST.done[CURN] && arr.length>=total){ const nr=document.querySelector(".navrow"); if(nr) nr.scrollIntoView({block:"center"}); } }));
-  document.querySelectorAll("details.step").forEach(d=>d.addEventListener("toggle",()=>{ if(d.open) document.querySelectorAll("details.step").forEach(o=>{ if(o!==d) o.open=false; }); }));
+  document.querySelectorAll("details.step").forEach(d=>d.addEventListener("toggle",()=>{ if(d.open) document.querySelectorAll("details.step").forEach(o=>{ if(o!==d) o.open=false; }); else if(SH.cur && d.querySelector(".shadow")) SH.cur.pause(); }));
+  document.querySelectorAll("[data-shstart]").forEach(b=>b.addEventListener("click",()=>startSessionShadow(b.closest(".shadow"))));
+  const shm=$("#shf-media"); if(shm) shm.addEventListener("change",()=>{ const f=shm.files&&shm.files[0]; if(f) shfPickMedia(f); });
+  const shs=$("#shf-sub"); if(shs) shs.addEventListener("change",()=>{ const f=shs.files&&shs.files[0]; if(f) shfPickSubs(f); });
+  if(view==="shadow") shfMount();
   const d=$("#done"); if(d) d.addEventListener("change",()=>{ ST.done[n]=d.checked; if(!d.checked) delete ST.done[n]; save(); });
   const p=$("#passed"); if(p) p.addEventListener("change",()=>{ ST.passed[n]=p.checked; if(!p.checked) delete ST.passed[n]; save(); });
   document.querySelectorAll("[data-focus]").forEach(c=>c.addEventListener("change",()=>{ const set=new Set(ST.focus||[]); c.checked?set.add(c.dataset.focus):set.delete(c.dataset.focus); ST.focus=[...set]; save(); }));
