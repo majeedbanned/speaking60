@@ -381,7 +381,9 @@ function shfPickMedia(file){
   if(SH.cur){ SH.cur.destroy(); SH.cur=null; }
   if(SHF.url) URL.revokeObjectURL(SHF.url);
   if(SHF.ctx){ try{ SHF.ctx.close(); }catch(e){} SHF.ctx=null; SHF.an=null; }
-  SHF.url=URL.createObjectURL(file); SHF.name=file.name; SHF.levels=[]; SHF.segs=null; SHF.texts=null;
+  SHF.url=URL.createObjectURL(file); SHF.name=file.name; SHF.levels=[];
+  if(!SHF.subsPending){ SHF.segs=null; SHF.texts=null; }   // keep a subtitle that was picked before this file
+  SHF.subsPending=false;
   shfMount();
 }
 function shfMount(){
@@ -393,7 +395,7 @@ function shfMount(){
 }
 async function shfPickSubs(file){
   const info=document.getElementById("shf-info");
-  try{ const r=parseSubs(await file.text()); if(!r.segs.length) throw 0; SHF.segs=r.segs; SHF.texts=r.texts; if(SHF.media) shfBuild(); else if(info) info.textContent=`زیرنویس خوانده شد (${fa(r.segs.length)} جمله). حالا فیلم یا صدا را انتخاب کن.`; }
+  try{ const r=parseSubs(await file.text()); if(!r.segs.length) throw 0; SHF.segs=r.segs; SHF.texts=r.texts; SHF.subsPending=!SHF.media; if(SHF.media) shfBuild(); else if(info) info.textContent=`زیرنویس خوانده شد (${fa(r.segs.length)} جمله). حالا فیلم یا صدا را انتخاب کن.`; }
   catch(e){ if(info) info.textContent="این فایل زیرنویس خوانده نشد؛ فقط فایل‌های srt یا vtt انگلیسی."; }
 }
 function renderShadowFile(){

@@ -35,16 +35,22 @@ def info(vid):
     keep = {"duration": d.get("duration"), "subtitles": d.get("subtitles") or {}, "automatic_captions": d.get("automatic_captions") or {}}
     f.write_text(json.dumps(keep)); return keep
 
+BLOCKED = False
+FORCED = 0        # chunks that had to be cut without a pause (lower quality); printed per video   # set after YouTube answers 429 once: skip further caption downloads this run
+
 def fetch_json(url, cache_file):
+    global BLOCKED
     if cache_file.exists(): return json.loads(cache_file.read_text())
-    for attempt in range(6):
+    if BLOCKED: return None
+    for attempt in range(2):
         try:
             data = json.load(urllib.request.urlopen(url, timeout=30))
             cache_file.write_text(json.dumps(data)); time.sleep(2)
             return data
         except urllib.error.HTTPError as e:
-            if e.code != 429 or attempt == 5: raise
-            wait = 60 * (attempt + 1); print(f"  429 from YouTube, waiting {wait}s", flush=True); time.sleep(wait)
+            if e.code != 429: raise
+            if attempt == 1: print("  captions blocked by YouTube (429) — using the audio from now on", flush=True); BLOCKED = True; return None
+            print("  429 from YouTube, waiting 20s", flush=True); time.sleep(20)
 
 def json3(tracks, langs, cache_key):
     for lang in langs:
@@ -92,7 +98,18 @@ def audio(vid, end):
     return f
 
 def speech_intervals(path, end):
-    r = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", "silencedetect=noise=-33dB:d=0.3", "-f", "null", "-"], capture_output=True, text=True)
+    """Pick the quietest silence threshold that still finds real pauses (noisy rooms need a higher one)."""
+    best = None
+    for db in (-33, -29, -25, -21, -18):
+        iv = _intervals(path, end, db)
+        lens = sorted(e - s for s, e in iv)
+        median = lens[len(lens) // 2] if lens else end
+        best = iv
+        if len(iv) >= end / 10 and median <= 6: break
+    return best
+
+def _intervals(path, end, db):
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(path), "-af", f"silencedetect=noise={db}dB:d=0.3", "-f", "null", "-"], capture_output=True, text=True)
     starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", r.stderr)]
     ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", r.stderr)]
     out, t = [], 0.0
@@ -117,9 +134,10 @@ def from_audio(iv, wstarts):
         if (cur[1] - cur[0] < 1.2) or (s - cur[1] < 0.45 and e - cur[0] <= 5.5): cur[1] = e
         else: segs.append(cur); cur = [s, e]
     if cur: segs.append(cur)
-    out = []
+    out = []; global FORCED
     for s, e in segs:
         if e - s <= 9: out.append([s, e]); continue
+        FORCED += 1
         parts = max(2, round((e - s) / 5.5)); cuts = [s + (e - s) * k / parts for k in range(1, parts)]
         inside = [w for w in wstarts if s + 1 < w < e - 1]
         if inside: cuts = sorted({min(inside, key=lambda w: abs(w - c)) for c in cuts})
@@ -148,10 +166,11 @@ def main(only):
         else:
             auto = json3(d["automatic_captions"], ["en-orig", "en", "en-GB", "en-US"], vid + ".auto")
             segs, src = from_audio(speech_intervals(audio(vid, end), end), words(auto)), "audio"
+        global FORCED
         segs = finish(segs, end)
         li["yt"] = vid; li["sh"] = {"src": src, "segs": segs}
         lens = [e - st for st, e in segs]
-        print(f"s{s['n']:>2} {vid} {src:8} end={int(end):>3}s segs={len(segs):>3} avg={sum(lens)/max(1,len(lens)):.1f}s max={max(lens or [0]):.1f}s", flush=True)
+        print(f"s{s['n']:>2} {vid} {src:8} end={int(end):>3}s segs={len(segs):>3} avg={sum(lens)/max(1,len(lens)):.1f}s max={max(lens or [0]):.1f}s forced={FORCED}", flush=True); FORCED = 0
         path.write_text(json.dumps(S, ensure_ascii=False, indent=1), encoding="utf8")   # save after every session
 
 if __name__ == "__main__":
