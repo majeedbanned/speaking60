@@ -146,6 +146,13 @@ CEFR: <B1|B1+|B2|B2+|C1>
 ${REPORT_LINES}
 (up to 8 ERRORS lines — the same mistakes as in your Error Log table)
 === END ===`;
+const REPORT_ASK = `WHEN I TYPE "REPORT" (after the voice conversation ends), reply with ONLY this block in plain text — nothing before or after it:
+=== SESSION REPORT ===
+QUESTIONS: asked=<number of questions I asked>; correct=<number that were correct the first time>
+SCORES: fluency=<1-10>; accuracy=<1-10>; vocabulary=<1-10>; pronunciation=<1-10>
+${REPORT_LINES}
+(3 to 6 ERRORS lines — my wrong questions and the correct versions)
+=== END ===`;
 const WRAP = `WHEN I SAY "FEEDBACK" (or after about 15 minutes), stop the conversation and give me:
 1) My top 3 recurring mistakes, each with the correct version and a one-line rule.
 2) 5 more natural phrases I could have used, based on what I said.
@@ -302,15 +309,16 @@ function parseReport(t){
   const mu=t.match(/MUST-USED\s*:\s*(\d)\s*\/\s*5/i); if(mu) r.must=+mu[1];
   const ce=t.match(/^[\s>*-]*CEFR\s*:\s*([ABC][12]\+?)/im); if(ce) r.cefr=ce[1].toUpperCase();
   const qz=kv(line("QUIZ")); if(qz) r.quiz={correct:qz.correct||0, almost:qz.almost||0, missed:qz.missed||0};
+  const qq=kv(line("QUESTIONS")); if(qq) r.questions={asked:qq.asked||0, correct:qq.correct||0};
   const re=/I said:\s*"([^"]+)"\s*\|\s*Correct:\s*"([^"]+)"(?:\s*\|\s*Type:\s*([A-Za-z\- ]+))?/gi; let m;
   while((m=re.exec(t))) r.errors.push({wrong:m[1].trim(), right:m[2].trim(), type:(m[3]||"").toLowerCase()});
   return r;
 }
 function saveReport(kind, n, text){
   const r=parseReport(text);
-  if(!(r.scores||r.bands||r.wpm!=null||r.must!=null||r.cefr||r.errors.length)) return {ok:false};
+  if(!(r.scores||r.bands||r.wpm!=null||r.must!=null||r.cefr||r.questions||r.errors.length)) return {ok:false};
   const rec={ts:Date.now()};
-  ["scores","must","bands","cefr","quiz","wpm","epm"].forEach(k=>{ if(r[k]!=null) rec[k]=r[k]; });
+  ["scores","must","bands","cefr","quiz","wpm","epm","questions"].forEach(k=>{ if(r[k]!=null) rec[k]=r[k]; });
   if(kind!=="session"){
     const m=ST.metrics[n]=ST.metrics[n]||{};
     if(r.wpm!=null) m.wpm=r.wpm; if(r.epm!=null) m.err=r.epm;
@@ -331,6 +339,7 @@ function reportSummary(r){
   if(r.scores) p.push(`روانی ${dash(r.scores.fluency)} · دقت ${dash(r.scores.accuracy)} · واژگان ${dash(r.scores.vocabulary)} · تلفظ ${dash(r.scores.pronunciation)}`);
   if(r.must!=null) p.push(`موارد اصلی ${fa(r.must)} از ۵`);
   if(r.bands) p.push(`Band روانی ${dash(r.bands.fluency)} · واژگان ${dash(r.bands.lexical)} · گرامر ${dash(r.bands.grammar)} · تلفظ ${dash(r.bands.pronunciation)}`);
+  if(r.questions) p.push(`سؤال‌ها: ${fa(r.questions.asked)} پرسیده، ${fa(r.questions.correct)} درست`);
   if(r.cefr) p.push(`CEFR ${r.cefr}`);
   if(r.quiz) p.push(`Quiz: ${fa(r.quiz.correct)} درست، ${fa(r.quiz.almost)} تقریباً، ${fa(r.quiz.missed)} غلط`);
   if(r.wpm!=null) p.push(`WPM ${fa(r.wpm)}`); if(r.epm!=null) p.push(`خطا در دقیقه ${fa(r.epm)}`);
@@ -370,11 +379,13 @@ function route(keep){
   if(TTS.ok) try{ speechSynthesis.cancel(); }catch(e){}
   const h=(location.hash||"").replace("#","");
   let view="today", n=null;
+  let askK=null;
   if(/^s\d+$/.test(h)){ view="s"; n=Math.min(60,Math.max(1,parseInt(h.slice(1)))); }
-  else if(["guide","assess","errors","progress","list","more","shadow"].includes(h)) view=h;
+  else if(/^ask[1-8]$/.test(h)){ view="askunit"; askK=+h.slice(3); }
+  else if(["guide","assess","errors","progress","list","more","shadow","ask"].includes(h)) view=h;
   if(view==="today") n=nextSession();
-  CURN = n!=null ? n : (view==="assess" ? "a" : null);
-  const on = view==="s" ? (n===nextSession()?"today":"list") : (["guide","assess","progress","shadow"].includes(view)?"more":view);
+  CURN = n!=null ? n : (view==="assess" ? "a" : (view==="askunit" ? "ask"+askK : null));
+  const on = view==="s" ? (n===nextSession()?"today":"list") : (["guide","assess","progress","shadow","ask","askunit"].includes(view)?"more":view);
   $("#tabs").innerHTML = TABS.map(([k,l])=>`<a href="#${k}" class="${on===k?"on":""}">${l}</a>`).join("");
   const app=$("#app");
   if(view==="guide") app.innerHTML=renderGuide();
@@ -384,6 +395,8 @@ function route(keep){
   else if(view==="list") app.innerHTML=renderList();
   else if(view==="more") app.innerHTML=renderMore();
   else if(view==="shadow") app.innerHTML=renderShadowFile();
+  else if(view==="ask") app.innerHTML=renderAskHome();
+  else if(view==="askunit") app.innerHTML=renderAskUnit(askK);
   else app.innerHTML=renderSessionShell(n);
   if(n!=null) LASTN=n;
   bind(view,n);
@@ -405,11 +418,11 @@ function sideList(cur){
 }
 function renderList(){
   const nx=nextSession();
-  return `<div class="biglist" style="margin-top:16px"><p class="small muted">${fa(Object.keys(ST.done).filter(k=>ST.done[k]).length)} از ۶۰ جلسه انجام شده · جلسهٔ امروز: <a href="#today">${fa(nx)}</a></p>${sideList(nx)}</div>`;
+  return `<div class="biglist" style="margin-top:16px"><a class="card morecard" href="#ask" style="margin-bottom:10px"><b>ضمیمه: هر سؤالی را بپرس</b><span class="small muted">۸ درس پرسیدن، جدا از جلسه‌ها — ${fa(Object.keys(ST.askDone||{}).length)} از ۸ انجام شده</span></a><p class="small muted">${fa(Object.keys(ST.done).filter(k=>ST.done[k]).length)} از ۶۰ جلسه انجام شده · جلسهٔ امروز: <a href="#today">${fa(nx)}</a></p>${sideList(nx)}</div>`;
 }
 function renderMore(){
   const card=(href,t,d)=>`<a class="card morecard" href="${href}"><b>${t}</b><span class="small muted">${d}</span></a>`;
-  return `<div class="morelist" style="margin-top:16px"><div class="card"><b>نصب روی گوشی</b>${installHelp()}</div>
+  return `<div class="morelist" style="margin-top:16px">${card("#ask","ضمیمه: هر سؤالی را بپرس","۸ درس با گرامر، اشتباه‌های رایج، تمرین و ChatGPT — تا بتوانی هر سؤالی را درست بپرسی")}<div class="card"><b>نصب روی گوشی</b>${installHelp()}</div>
   ${card("#assess","ارزیابی اولیه","یک بار قبل از جلسهٔ ۱ — تعیین سطح و ضعف‌ها")}
   ${card("#errors","دفتر من","پروفایل کاری، بانک جمله‌ها، دفتر خطا و لیست سخت‌ها")}
   ${card("#shadow","Shadowing با فایل خودت","فیلم، سریال یا پادکست خودت را جمله‌به‌جمله تمرین کن (با زیرنویس یا بدون آن)")}
@@ -493,7 +506,7 @@ function renderSession(s){
     <div class="sub">۵ مورد پشتیبان</div>${itemList(sp.support)}
     ${sp.extra.length?`<details class="howd"><summary>موارد اضافه (اختیاری · ${fa(sp.extra.length)} مورد)</summary>${itemList(sp.extra)}</details>`:""}`);
   const s4=step(4,`گرامر گفتاری: <span class="en">${esc(s.g.t)}</span>`,"۶ دقیقه",
-    `<p>${esc(s.g.fa)}</p><ul class="gram-ex">${s.g.ex.map(e=>`<li>${TTS.btn(e)}${esc(e)}</li>`).join("")}</ul><div class="drill"><b>Drill شفاهی:</b> ${esc(s.g.drill)}</div>`);
+    `${[4,15,38].includes(n)?`<p class="small"><a href="#ask">همهٔ قواعد پرسیدن با تمرین: ضمیمهٔ «هر سؤالی را بپرس» ←</a></p>`:""}<p>${esc(s.g.fa)}</p><ul class="gram-ex">${s.g.ex.map(e=>`<li>${TTS.btn(e)}${esc(e)}</li>`).join("")}</ul><div class="drill"><b>Drill شفاهی:</b> ${esc(s.g.drill)}</div>`);
   const isTed = s.li.u.includes("ted.com/talks/");
   const s5=step(5,s.li.dialog?"شنیدن و Shadowing دیالوگ":"شنیدن و Shadowing","۸ دقیقه",
     `<p><b>امروز:</b> <a href="${esc(s.li.u)}" target="_blank" rel="noopener"><span class="en">${esc(s.li.t)}</span></a>${isTed?` · <a href="${esc(s.li.u)}/transcript" target="_blank" rel="noopener">متن کامل (Transcript)</a>`:""}</p><p><b>بازه:</b> ${esc(s.li.seg)}</p><p>${esc(s.li.task)}</p>${s.li.sh&&s.li.sh.segs.length?`<div class="shadow" data-shadow="${n}"><button class="btn pri" type="button" data-shstart>▶ Shadowing جمله‌به‌جمله (${fa(s.li.sh.segs.length)} جمله)</button><span class="small muted">ویدیو داخل برنامه پخش می‌شود، بعد از هر جمله می‌ایستد تا تکرارش کنی و خودش می‌رود جملهٔ بعد.</span></div>`:""}<p class="small"><a href="#shadow">یا Shadowing با فیلم، سریال یا پادکست خودت ←</a></p>${s.li.dialog?SHADOW_DIALOG_HOW:SHADOW_HOW}`);
@@ -604,6 +617,7 @@ function renderGuide(){
   <li><b>ریتم پیشنهادی:</b> ۵ جلسه در هفته (۱۲ هفته). حداقل ۳ جلسه در هفته (۲۰ هفته). اگر ۳ روز یا بیشتر وقفه افتاد، اول فقط مرور فاصله‌دار و ChatGPT جلسهٔ آخر را تکرار کن، بعد ادامه بده.</li>
   <li><b>روزهای شلوغ (نسخهٔ ۲۰ دقیقه‌ای):</b> فقط بخش ۲ (مرور) + بخش ۸ (ChatGPT) را انجام بده و روز بعد جلسه را کامل کن. بیش از ۲ بار در هفته از نسخهٔ کوتاه استفاده نکن.</li></ul></section>
 
+  <section class="card"><h2>ضمیمه: هر سؤالی را بپرس</h2><p>یک بخش جدا با ۸ درس فقط برای پرسیدن: فرمول طلایی، کلمه‌های پرسشی، سؤال فاعلی و مفعولی، همهٔ زمان‌ها، سؤال غیرمستقیم و مؤدبانه، Tag و سؤال‌های واکنشی، سؤال برای درخواست و پیشنهاد و نظر، و روش پرسیدن هر سؤالی با آزمون نهایی. هر وقت خواستی، در کنار جلسه‌ها یا جدا از آن‌ها، انجامش بده. <a href="#ask">رفتن به ضمیمه ←</a></p></section>
   <section><h2>مدل تلفظ: انگلیسی آمریکایی</h2><p>همهٔ تلفظ‌ها، املاها و پرامپت‌ها بر اساس انگلیسی آمریکایی است (رایج‌ترین مدل در محیط‌های فنی). هر جا شکل بریتانیایی آمده، فقط برای فهمیدن است.</p></section>
 
   <section><h2>تله‌های فارسی‌زبان‌ها</h2><p class="small muted">این‌ها پرتکرارترین خطاهای فارسی‌زبان‌ها در صحبت‌اند. ChatGPT در همهٔ جلسه‌ها روی آن‌ها حساس است و در هر جلسهٔ مرور یک بار با ضبط خودت چکشان می‌کنی.</p>${trapsTable()}</section>
@@ -690,7 +704,7 @@ function renderErrors(){
     <label>نوع<br><select id="e-type">${Object.entries(typeL).map(([k,l])=>`<option value="${k}">${l}</option>`).join("")}</select></label>
     <button class="btn pri" type="submit">افزودن</button></form></div>
   <div class="tbl"><table><thead><tr><th>جلسه</th><th>آنچه گفتم</th><th>شکل درست</th><th>نوع</th><th>حل شد</th><th></th></tr></thead><tbody>
-  ${errs.length?errs.map((e,i)=>`<tr style="${e.done?"opacity:.5":""}"><td class="kpi">${fa(e.s||"-")}</td><td class="en">${esc(e.wrong)}</td><td class="en"><b>${esc(e.right)}</b></td><td>${typeL[e.type]||""}</td><td><input type="checkbox" data-errdone="${i}" ${e.done?"checked":""} aria-label="حل شد"></td><td><button class="btn small" data-errdel="${i}">حذف</button></td></tr>`).reverse().join(""):`<tr><td colspan="6" class="muted">هنوز چیزی ثبت نشده. فهرست تله‌های رایج فارسی‌زبان‌ها در <a href="#guide">راهنما</a> هست.</td></tr>`}
+  ${errs.length?errs.map((e,i)=>`<tr style="${e.done?"opacity:.5":""}"><td class="kpi">${typeof e.s==="string"&&e.s.startsWith("ask")?"ضمیمه "+fa(e.s.slice(3)):fa(e.s||"-")}</td><td class="en">${esc(e.wrong)}</td><td class="en"><b>${esc(e.right)}</b></td><td>${typeL[e.type]||""}</td><td><input type="checkbox" data-errdone="${i}" ${e.done?"checked":""} aria-label="حل شد"></td><td><button class="btn small" data-errdel="${i}">حذف</button></td></tr>`).reverse().join(""):`<tr><td colspan="6" class="muted">هنوز چیزی ثبت نشده. فهرست تله‌های رایج فارسی‌زبان‌ها در <a href="#guide">راهنما</a> هست.</td></tr>`}
   </tbody></table></div></section>
   <section><h2>لیست سخت‌ها (${fa(hard.length)})</h2>
   <p class="small muted">موردهایی که ★ زده‌ای. روی هر کدام بزن تا از لیست خارج شود.</p>
@@ -748,12 +762,69 @@ function renderProgress(){
   </div>`;
 }
 
+
+/* ======================= Appendix: asking any question ======================= */
+function askPrompt(u){ return `You are my English coach. ${learner()}
+
+Today we practice ONE skill only: ASKING QUESTIONS — "${u.en}" (lesson ${u.k} of 8 in my question-asking course).
+
+ACTIVITY: ${u.gpt}
+
+RULES FOR YOU:
+- Use American English. Never switch to Persian.
+- I should be the one asking most of the questions. Keep your answers short (1–2 sentences) so I ask the next question quickly.
+- After every question I ask, check its form: word order, the auxiliary (do/does/did, be, have, modals), the tense, subject vs object questions, statement word order inside indirect questions, question tags and politeness. If it is wrong, say "Quick fix:" and the correct question, make me ask it again, and only then answer.
+- If my question is correct, just answer it naturally — don't praise every question.
+- If I go silent, give me a hint like "Ask me about my weekend" instead of asking for me.
+- Tell me if my intonation makes a question hard to understand (wh- questions fall, yes/no questions rise).
+
+WHEN I SAY "FEEDBACK": tell me how many questions I asked and how many were correct, my top 3 question mistakes with corrections, and 5 useful questions I could have asked.
+
+${REPORT_ASK}
+
+Start now: ${u.start}`; }
+function drillScore(k){
+  const u=ASK[k-1], m=(ST.askDrill||{})[k]||{}, marked=Object.keys(m).length, ok=Object.values(m).filter(v=>v===1).length;
+  return marked ? `درست: <b>${fa(ok)}</b> از ${fa(u.drills.length)}${marked<u.drills.length?` · ${fa(u.drills.length-marked)} مورد مانده`:""}${marked===u.drills.length?(ok>=Math.ceil(u.drills.length*0.8)?` · <span class="ok">عالی — این درس را یاد گرفته‌ای ✓</span>`:` · <span class="bad">موارد اشتباه را فردا دوباره تمرین کن</span>`):""}` : `هنوز تمرینی علامت نخورده (${fa(u.drills.length)} تمرین)`;
+}
+const askPromptFmt = t => esc(t).replace(/\[(.+?)\]/g,"<mark>$1</mark>");
+function renderAskHome(){
+  const done=ST.askDone||{}, nd=Object.keys(done).length;
+  return `<div class="doc" style="margin-top:24px">
+  <div class="kick"><span class="pill amb">ضمیمه · جدا از ۶۰ جلسه</span></div>
+  <h1>هر سؤالی را بپرس</h1>
+  <p class="lead">پرسیدن مهارت جداگانه‌ای است و فارسی‌زبان‌ها در آن اشتباه‌های خیلی تکراری دارند، چون در فارسی سؤال با ترتیب جملهٔ خبری ساخته می‌شود. این ۸ درس همهٔ گرامر و قالب‌های پرسیدن را، از ساده‌ترین سؤال بله/خیر تا سؤال‌های غیرمستقیم و مؤدبانه، با تمرین و گفتگو با ChatGPT درس می‌دهند. هر درس حدود ۴۰ دقیقه است.</p>
+  <div class="card formula-card"><div class="small muted">فرمول طلایی همهٔ سؤال‌ها</div><div class="formula en">(Question word) + Auxiliary + Subject + Main verb + …?</div><div class="small">(کلمهٔ پرسشی) + فعل کمکی + فاعل + فعل اصلی + بقیه — اگر جمله فعل کمکی ندارد، <span class="en">do / does / did</span>.</div></div>
+  <div class="progress-bar thin" aria-hidden="true"><i style="width:${Math.round(nd/8*100)}%"></i></div><p class="small muted">${fa(nd)} از ۸ درس انجام شده</p>
+  <div class="ask-list">${ASK.map(u=>`<a class="card ask-card ${done[u.k]?"done":""}" href="#ask${u.k}"><span class="n">${done[u.k]?"✓":fa(u.k)}</span><span><b>${esc(u.t)}</b><span class="en small muted">${esc(u.en)}</span><span class="small muted">${drillScore(u.k)}</span></span></a>`).join("")}</div>
+  <section><h2>بعد از این ضمیمه، این‌ها را می‌توانم</h2><ul class="can-list">${ASK.map(u=>`<li class="${done[u.k]?"ok":""}">${done[u.k]?"✓ ":""}${esc(u.can)}</li>`).join("")}</ul></section>
+  <div class="how">پیشنهاد: هر درس را در یک روز جدا (یا به‌جای نسخهٔ ۲۰ دقیقه‌ای روزهای شلوغ) انجام بده. بعد از درس ۸، تمرین‌های درس‌هایی که زیر ۸۰٪ شدند را یک بار دیگر بزن.</div>
+  </div>`;
+}
+function renderAskUnit(k){
+  const u=ASK[k-1], d=stepsDone().length;
+  const tbl=`<div class="tbl"><table><thead><tr>${u.table.head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${u.table.rows.map(r=>`<tr>${r.map((c,i)=>`<td class="${/[A-Za-z]/.test(c)&&!/[؀-ۿ]/.test(c)?"en":""}">${esc(c)}${i===r.length-1&&/[A-Za-z]/.test(c)?TTS.btn(c):""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  const s1=step(1,"درس و فرمول","۱۰ دقیقه",`<div class="formula">${esc(u.formula)}</div><ul class="notes">${u.notes.map(x=>`<li>${x}</li>`).join("")}</ul>${tbl}`);
+  const s2=step(2,"مثال‌ها — بشنو و تکرار کن","۵ دقیقه",rateBar()+`<p class="small muted">هر مثال را با 🔊 گوش کن و دو بار با همان لحن تکرار کن. به بالا و پایین رفتن صدا در انتهای سؤال دقت کن.</p><ul class="gram-ex">${u.ex.map(e=>`<li>${TTS.btn(e)}${esc(e)}</li>`).join("")}</ul>`);
+  const s3=step(3,"اشتباه‌های رایج فارسی‌زبان‌ها","۵ دقیقه",`<div class="tbl"><table><thead><tr><th>اشتباه</th><th>درست</th><th>چرا</th></tr></thead><tbody>${u.traps.map(t=>`<tr><td dir="auto" class="wrong">${esc(t[0])}</td><td class="en"><b>${esc(t[1])}</b>${TTS.btn(t[1])}</td><td class="small">${esc(t[2])}</td></tr>`).join("")}</tbody></table></div><p class="small muted">شکل درست هر کدام را ۳ بار بلند بگو.</p>`);
+  const drills=`<div class="drills" data-unit="${k}"><p class="small">${esc(u.drillHow)} اول جوابت را <b>بلند</b> بگو، بعد «جواب» را بزن و صادقانه علامت بزن.</p><div class="drill-score small">${drillScore(k)}</div>${u.drills.map((x,i)=>{ const m=((ST.askDrill||{})[k]||{})[i]; return `<div class="drow ${m===1?"good":m===0?"badrow":""}" data-di="${i}"><div class="dq" dir="auto">${fa(i+1)}. ${askPromptFmt(x[0])}</div><button class="btn small" type="button" data-dshow ${m!=null?"hidden":""}>جواب</button><div class="da" ${m!=null?"":"hidden"}><span class="en"><b>${esc(x[1])}</b></span>${TTS.btn(x[1])}<span class="row"><button class="btn small" type="button" data-dmark="1">درست گفتم ✓</button><button class="btn small" type="button" data-dmark="0">اشتباه بود ✗</button></span></div></div>`; }).join("")}<button class="btn small" type="button" data-dreset>پاک کردن علامت‌ها و تمرین دوباره</button></div>`;
+  const s4=step(4,"تمرین","۱۰ دقیقه",drills);
+  const s5=step(5,"پرسیدن با ChatGPT Voice","۱۰ دقیقه",`<ol class="small mini-steps"><li>«باز کردن در <span class="en">ChatGPT</span>» را بزن.</li><li>دکمهٔ <span class="en">Voice</span> را بزن؛ این بار <b>تو</b> سؤال می‌پرسی.</li><li>آخر کار بگو <span class="en">"FEEDBACK"</span>.</li><li><span class="en">Voice</span> را ببند، تایپ کن <span class="en">REPORT</span> و جواب را پایین <span class="en">Paste</span> کن.</li></ol>${gptBlock(askPrompt(u))}${reportBox("session","ask"+k)}`,"gpt");
+  const s6=step(6,"چالش پایانی (ضبط کن)","۵ دقیقه",`<p>${esc(u.ch)}</p>${recBox("ask"+k+":ch","ضبط چالش",150)}<p class="small"><b>هدف این درس:</b> ${esc(u.can)}</p>`,"challenge");
+  return `<div class="ask-unit" style="margin-top:16px">
+  <div class="today-bar"><span><a href="#ask">ضمیمهٔ پرسیدن</a> · درس ${fa(k)} از ۸${(ST.askDone||{})[k]?" · انجام شده ✓":""}</span><span>${fa(d)} از ۶ بخش</span></div>
+  <div class="progress-bar thin" aria-hidden="true"><i style="width:${Math.round(d/6*100)}%"></i></div>
+  <div class="s-head"><h1>${esc(u.t)}</h1><div class="ent en">${esc(u.en)}</div><div class="goal">${u.intro}</div></div>
+  <div class="steps">${s1}${s2}${s3}${s4}${s5}${s6}</div>
+  <div class="navrow">${k>1?`<a class="btn" href="#ask${k-1}">→ درس ${fa(k-1)}</a>`:`<a class="btn" href="#ask">→ فهرست ضمیمه</a>`}${k<8?`<a class="btn" href="#ask${k+1}">درس ${fa(k+1)} ←</a>`:`<a class="btn" href="#ask">فهرست ضمیمه ←</a>`}</div></div>`;
+}
+
 /* ======================= Events ======================= */
 function bind(view,n){
   document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{ copyText((b.closest(".prompt")||b.parentElement).querySelector("pre").textContent,b); if("backup" in b.dataset){ ST.lastBackup=Date.now(); save(); } }));
   document.querySelectorAll("[data-gptopen]").forEach(a=>a.addEventListener("click",()=>{ const pre=a.closest(".prompt").querySelector("pre"); try{ navigator.clipboard.writeText(pre.textContent).catch(()=>{}); }catch(e){} }));
   document.querySelectorAll("[data-reportsave]").forEach(b=>b.addEventListener("click",()=>{ const box=b.closest(".report"), ta=box.querySelector("[data-reporttext]"), msg=box.querySelector("[data-reportmsg]");
-    const res=saveReport(box.dataset.report, +box.dataset.n, ta.value);
+    const nn=box.dataset.n, res=saveReport(box.dataset.report, /^\d+$/.test(nn)?+nn:nn, ta.value);
     if(!res.ok){ msg.textContent="گزارشی پیدا نشد. مطمئن شو جواب REPORT را کامل کپی کرده‌ای."; msg.className="small bad"; return; }
     ta.value=""; msg.textContent="ثبت شد ✓"; msg.className="small ok"; box.querySelector("[data-reportsum]").innerHTML=reportSummary(res.rec); }));
   document.querySelectorAll("[data-snooze]").forEach(b=>b.addEventListener("click",()=>{ ST[b.dataset.snooze+"Snooze"]=Date.now(); save(); route(true); }));
@@ -772,9 +843,16 @@ function bind(view,n){
       return; }
     setHard(k,!ST.hard[k]); if(view==="errors") route(true); }));
   document.querySelectorAll("[data-stepdone]").forEach(b=>b.addEventListener("click",()=>{ const num=+b.dataset.stepdone; ST.steps=ST.steps||{}; const arr=ST.steps[CURN]=ST.steps[CURN]||[]; if(!arr.includes(num)) arr.push(num);
-    const total=document.querySelectorAll("details.step").length; if(typeof CURN==="number" && arr.length>=total) ST.done[CURN]=true; save(); route(true);
+    const total=document.querySelectorAll("details.step").length; if(typeof CURN==="number" && arr.length>=total) ST.done[CURN]=true;
+    if(typeof CURN==="string" && /^ask\d$/.test(CURN) && arr.length>=total){ ST.askDone=ST.askDone||{}; ST.askDone[CURN.slice(3)]=true; }
+    save(); route(true);
     if(typeof CURN==="number" && ST.done[CURN] && arr.length>=total){ const nr=document.querySelector(".navrow"); if(nr) nr.scrollIntoView({block:"center"}); } }));
   document.querySelectorAll("details.step").forEach(d=>d.addEventListener("toggle",()=>{ if(d.open) document.querySelectorAll("details.step").forEach(o=>{ if(o!==d) o.open=false; }); else if(SH.cur && d.querySelector(".shadow")) SH.cur.pause(); }));
+  document.querySelectorAll("[data-dshow]").forEach(b=>b.addEventListener("click",()=>{ const row=b.closest(".drow"); row.querySelector(".da").hidden=false; b.hidden=true; }));
+  document.querySelectorAll("[data-dmark]").forEach(b=>b.addEventListener("click",()=>{ const row=b.closest(".drow"), box=b.closest(".drills"), k=box.dataset.unit, i=row.dataset.di;
+    ST.askDrill=ST.askDrill||{}; ST.askDrill[k]=ST.askDrill[k]||{}; ST.askDrill[k][i]=+b.dataset.dmark; save();
+    row.classList.toggle("good", b.dataset.dmark==="1"); row.classList.toggle("badrow", b.dataset.dmark==="0"); box.querySelector(".drill-score").innerHTML=drillScore(+k); }));
+  document.querySelectorAll("[data-dreset]").forEach(b=>b.addEventListener("click",()=>{ const k=b.closest(".drills").dataset.unit; ST.askDrill=ST.askDrill||{}; delete ST.askDrill[k]; save(); route(true); }));
   document.querySelectorAll("[data-shstart]").forEach(b=>b.addEventListener("click",()=>startSessionShadow(b.closest(".shadow"))));
   const shm=$("#shf-media"); if(shm) shm.addEventListener("change",()=>{ const f=shm.files&&shm.files[0]; if(f) shfPickMedia(f); });
   const shs=$("#shf-sub"); if(shs) shs.addEventListener("change",()=>{ const f=shs.files&&shs.files[0]; if(f) shfPickSubs(f); });

@@ -275,3 +275,24 @@ a.btn{text-decoration:none; display:inline-flex; align-items:center}
 .sh-opts{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
 .sh-opts .btn.on{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
 .sh-text{font-size:17px; line-height:1.6; padding:8px 10px; background:var(--surface-2); border-radius:8px; min-height:2.4em}
+
+/* appendix: asking questions */
+.formula{font-weight:700; background:var(--accent-soft); border-radius:8px; padding:10px 12px; text-align:center}
+.formula-card{display:grid; gap:6px}
+.formula.en{direction:ltr; font-size:17px}
+.notes{display:grid; gap:6px; padding-inline-start:20px; margin:0}
+.ask-list{display:grid; gap:8px}
+.ask-card{display:grid; grid-template-columns:auto minmax(0,1fr); gap:12px; align-items:center; text-decoration:none; color:var(--ink); padding:12px 14px}
+.ask-card > span:last-child{display:grid; gap:2px}
+.ask-card .n{width:30px; height:30px; border-radius:50%; background:var(--accent); color:var(--accent-ink); display:grid; place-items:center; font-weight:800}
+.ask-card.done .n{background:var(--good); color:#fff}
+.can-list{display:grid; gap:4px}
+.can-list li.ok{color:var(--good)}
+td.wrong{text-decoration:line-through; color:var(--rec); opacity:.85}
+.drills{display:grid; gap:8px}
+.drow{border:1px solid var(--line); border-radius:8px; padding:8px 10px; display:grid; gap:6px; justify-items:start}
+.drow.good{border-color:var(--good); background:var(--good-soft)}
+.drow.badrow{border-color:var(--rec); background:var(--rec-soft)}
+.drow mark{background:var(--amber-soft); color:var(--ink); padding:0 3px; border-radius:3px}
+.drow .da{display:grid; gap:6px}
+.drow .dq{font-size:15px}

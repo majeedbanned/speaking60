@@ -7,6 +7,7 @@ sessions = json.loads((src / "sessions.json").read_text(encoding="utf8"))
 data = "const SESSIONS = [];\nfunction S(o){ SESSIONS[o.n] = o; }\n" + "\n".join("S(" + json.dumps(s, ensure_ascii=False) + ");" for s in sessions)
 html = (src / "shell.html").read_text(encoding="utf8")
 for marker, text in [("/*STYLE*/", (src / "style.css").read_text(encoding="utf8")), ("/*DATA*/", data),
+                     ("/*ASK*/", (src / "ask.js").read_text(encoding="utf8")),
                      ("/*MODULES*/", (src / "modules.js").read_text(encoding="utf8")), ("/*APP*/", (src / "app.js").read_text(encoding="utf8"))]:
     assert marker in html, marker
     html = html.replace(marker, text, 1)
